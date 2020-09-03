@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "mon_oeil_db",
+    "mon_oeil_api",
+    "mon_oeil_file",
+    "mon_oeil_auth",
+    "mon_oeil_auth_shared"
+]

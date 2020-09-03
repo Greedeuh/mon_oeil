@@ -1,0 +1,28 @@
+[package]
+name = "mon_oeil_auth"
+version = "0.1.0"
+authors = ["Adrienol <delasalle.sio.olivon.a@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix = "0.9.0"
+actix-rt = "1.1.1"
+actix-web = "2.0.0"
+actix_derive = "0.5.0"
+dotenv = "0.15.0"
+env_logger = "0.7.1"
+actix-http = "1.0.1"
+failure = "0.1.8"
+log = "0.4.11"
+serde = {version = "1.0.115", features = ["derive"]}
+serde_json = "1.0.57"
+smpl_jwt = "0.5.0"
+mon_oeil_auth_shared = {path = "../mon_oeil_auth_shared"}
+chrono = "0.4"
+mon_oeil_db = {path = "../mon_oeil_db"}
+actix-cors = "0.2.0"
+
+[dev-dependencies]
+faux = "0.0.5"
