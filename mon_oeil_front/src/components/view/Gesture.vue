@@ -1,8 +1,5 @@
 <template>
   <div>
-    <div :v-if="admin" class="delete">
-      <button @click="delete_gesture()">Delete</button>
-    </div>
     <div id="gesture">
       <div id="left">
         <div id="imgs">
@@ -10,7 +7,6 @@
             v-for="picture in gesture.pictures"
             :key="picture.id"
             :picture="picture"
-            :admin="admin"
           />
         </div>
       </div>
@@ -20,13 +16,10 @@
             v-for="d in gesture.descriptions"
             :key="d.value"
             :description="d"
-            :admin="admin"
           />
-          <NewDescription :id_gesture="gesture.id" />
         </div>
         <div id="meaning">
-          <Meaning v-for="m in gesture.meanings" :key="m.value" :meaning="m" :admin="admin" />
-          <NewMeaning :id_gesture="gesture.id" />
+          <Meaning v-for="m in gesture.meanings" :key="m.value" :meaning="m" />
         </div>
       </div>
     </div>
@@ -37,9 +30,6 @@
 import Description from "./Description.vue";
 import Meaning from "./Meaning.vue";
 import Picture from "./Picture.vue";
-import { delete_gesture } from "../service";
-import NewMeaning from "./NewMeaning.vue";
-import NewDescription from "./NewDescription.vue";
 
 export default {
   name: "Gesture",
@@ -47,8 +37,6 @@ export default {
     Description,
     Meaning,
     Picture,
-    NewMeaning,
-    NewDescription,
   },
   props: {
     gesture: Object,
@@ -60,13 +48,6 @@ export default {
   computed: {
     meaning() {
       return this.data.meanings[this.meaning_index];
-    },
-  },
-  methods: {
-    delete_gesture() {
-      delete_gesture(this.gesture.id).then(() =>
-        this.$emit("delete", this.gesture.id)
-      );
     },
   },
 };

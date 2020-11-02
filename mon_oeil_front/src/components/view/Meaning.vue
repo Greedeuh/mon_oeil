@@ -1,17 +1,21 @@
 <template>
-  <div>
-    <div id="langs">
-      <slot name="langs"></slot>
-    </div>
-    <div id="value">
-      <slot name="value"></slot>
-    </div>
+  <div id="meaning-langs">
+    <Lang v-for="lang in meaning.langs" :key="lang" :lang="lang" />
+    <p>{{ meaning.value }}</p>
   </div>
 </template>
 
 <script>
+import Lang from "./Lang.vue";
+
 export default {
-  name: "MeaningLayout",
+  name: "Meaning",
+  components: {
+    Lang,
+  },
+  props: {
+    meaning: Object,
+  },
 };
 </script>
 

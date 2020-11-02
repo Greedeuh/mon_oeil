@@ -1,10 +1,12 @@
 <template>
   <div>
     <div id="picture">
-      <div :v-if="admin" class="delete">
-        <button @click="delete_picture()">Delete</button>
-      </div>
-      <Lang class="langs" v-for="lang in picture.langs" :key="lang" :lang="lang" />
+      <Lang
+        class="langs"
+        v-for="lang in picture.langs"
+        :key="lang"
+        :lang="lang"
+      />
       <img id="picture-img" src="https://picsum.photos/300" />
     </div>
   </div>
@@ -12,7 +14,6 @@
 
 <script>
 import Lang from "./Lang.vue";
-import { delete_picture } from "../service";
 
 export default {
   name: "Picture",
@@ -21,14 +22,9 @@ export default {
   },
   props: {
     picture: Object,
-    admin: Boolean,
   },
   methods: {
-    delete_picture() {
-      delete_picture(this.picture.id).then(() =>
-        this.$emit("delete", this.picture.id)
-      );
-    },
+    delete_picture() {},
   },
 };
 </script>
