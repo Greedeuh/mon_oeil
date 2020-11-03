@@ -12,8 +12,6 @@ use actix_cors::Cors;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use model::*;
 use mon_oeil_auth_shared;
-use actix_http::http::Method;
-
 
 async fn get_gestures(
     _req: HttpRequest,
@@ -198,8 +196,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::new()
-                .allowed_origin("http://localhost:8080")
-                .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
+                    .allowed_origin("http://localhost:8080")
+                    .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
                     .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                     .allowed_header(http::header::CONTENT_TYPE)
                     .max_age(3600)
@@ -231,7 +229,7 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(post_picture_meta),
             )
             .route("/pictures", web::delete().to(delete_picture))
-            .route("/*", web::method(Method::OPTIONS).to(delete_picture))
+            .route("/*", web::method(http::Method::OPTIONS).to(delete_picture))
     })
     .bind("127.0.0.1:8000")?
     .run()
