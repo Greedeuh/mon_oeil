@@ -1,5 +1,5 @@
 [package]
-authors = ["delasalle-sio-olivon <delasalle.sio.olivon.a@gmail.com>"]
+authors = ["Greedeuh <adrien.olivon.dev@gmail.com>"]
 edition = "2018"
 name = "mon_oeil_db"
 version = "0.1.0"
