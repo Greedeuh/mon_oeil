@@ -1,4 +1,4 @@
-use actix_web::{error, http, web};
+use actix_web::{error, web};
 use failure::Fail;
 use serde::{Deserialize, Serialize};
 
