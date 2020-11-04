@@ -367,7 +367,7 @@ pub async fn delete(client: &Client, table: &str, id_col: &str, id: &Uuid) -> Re
         Ok(nb) => {
             // check if there is at least one row deleted
             if nb < 1 {
-                Err(DbError(format!("No items were deleted")))
+                Err(DbError("No items were deleted".to_string()))
             } else {
                 Ok(())
             }
@@ -389,7 +389,7 @@ fn group_by_id_gesture<T: GestureReliant>(items: Vec<T>) -> (LinkedHashMap<Uuid,
             match acc.get_mut(item.id_gesture().unwrap()) {
                 Some(v) => v.push(item),
                 _ => {
-                    acc.insert(item.id_gesture().unwrap().clone(), vec![item]);
+                    acc.insert(*item.id_gesture().unwrap(), vec![item]);
                 }
             };
             acc
@@ -415,10 +415,7 @@ fn group_by_id_description(
                 match acc.get_mut(meaning.id_description.as_ref().unwrap()) {
                     Some(v) => v.push(meaning),
                     _ => {
-                        acc.insert(
-                            meaning.id_description.as_ref().unwrap().clone(),
-                            vec![meaning],
-                        );
+                        acc.insert(*meaning.id_description.as_ref().unwrap(), vec![meaning]);
                     }
                 };
                 acc
@@ -442,17 +439,17 @@ fn merge(
         .map(|gesture| {
             let descriptions = descriptions
                 .remove(&gesture.id_gesture)
-                .or(Some(vec![]))
+                .or_else(|| Some(vec![]))
                 .unwrap()
                 .into_iter()
                 .map(|d| {
                     // for each meaning add nested data by id (from id grouped Map)
                     let description_meanings = description_meanings
                         .remove(&d.id_description)
-                        .or(Some(vec![]))
+                        .or_else(|| Some(vec![]))
                         .unwrap()
                         .into_iter()
-                        .map(|d| Meaning::from_raw(d))
+                        .map(Meaning::from_raw)
                         .collect();
 
                     Description::from_raw(d, description_meanings)
@@ -461,18 +458,18 @@ fn merge(
 
             let meanings = meanings
                 .remove(&gesture.id_gesture)
-                .or(Some(vec![]))
+                .or_else(|| Some(vec![]))
                 .unwrap()
                 .into_iter()
-                .map(|d| Meaning::from_raw(d))
+                .map(Meaning::from_raw)
                 .collect();
 
             let pictures = pictures
                 .remove(&gesture.id_gesture)
-                .or(Some(vec![]))
+                .or_else(|| Some(vec![]))
                 .unwrap()
                 .into_iter()
-                .map(|d| Picture::from_raw(d))
+                .map(Picture::from_raw)
                 .collect();
 
             Gesture::from_raw(gesture, descriptions, meanings, pictures)

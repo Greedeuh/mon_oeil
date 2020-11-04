@@ -14,11 +14,7 @@ impl DbPool {
     }
 
     pub async fn get(&self) -> Result<DbClient, DbError> {
-        self.0
-            .get()
-            .await
-            .map_err(DbError::from)
-            .map(|client| DbClient::new(client))
+        self.0.get().await.map_err(DbError::from).map(DbClient::new)
     }
 }
 

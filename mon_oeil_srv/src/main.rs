@@ -1,8 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{http, middleware::Logger, App, HttpServer};
 use env_logger::Env;
-use mon_oeil_auth;
-use mon_oeil_core;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {

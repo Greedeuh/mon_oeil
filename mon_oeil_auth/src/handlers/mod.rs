@@ -22,7 +22,7 @@ pub async fn login(
 
     let expire = Utc::now()
         .checked_add_signed(chrono::Duration::weeks(1000))
-        .ok_or(ApiError("Expiration bug".to_owned()))?;
+        .ok_or_else(|| ApiError("Expiration bug".to_owned()))?;
     encode_jwt(
         &conf.hs256_private_key,
         JwtPayload {
@@ -30,7 +30,7 @@ pub async fn login(
             exp: expire.timestamp(),
         },
     )
-    .map_err(|_| ApiError(format!("Failed to produce jwt")))
+    .map_err(|_| ApiError("Failed to produce jwt".to_string()))
 }
 
 #[cfg(test)]
