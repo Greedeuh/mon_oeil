@@ -25,7 +25,7 @@ pub const LANG_M_COL: &str = "langs";
 pub const ID_P_COL: &str = "id_picture";
 pub const LANG_P_COL: &str = "langs";
 pub const USERNAME_COL: &str = "username";
-pub const PASSWORD_COL: &str = "password";
+pub const _PASSWORD_COL: &str = "password";
 
 pub trait Insertable {
     /// Parametrized insert query
@@ -38,14 +38,6 @@ pub trait Insertable {
 pub struct RawGesture {
     pub id_gesture: Uuid,
     pub tags: Vec<String>,
-}
-
-impl RawGesture {
-    pub fn from(new: NewGesture, id_gesture: Uuid) -> Self {
-        let NewGesture { tags, .. } = new;
-
-        Self { id_gesture, tags }
-    }
 }
 
 impl Insertable for RawGesture {
@@ -74,19 +66,6 @@ pub struct RawDescription {
     pub id_gesture: Uuid,
     pub val: String,
     pub langs: Vec<String>,
-}
-
-impl RawDescription {
-    pub fn from(new: NewDescription, id_gesture: Uuid, id_description: Uuid) -> Self {
-        let NewDescription { value, langs, .. } = new;
-
-        Self {
-            id_description,
-            id_gesture,
-            val: value,
-            langs,
-        }
-    }
 }
 
 impl Insertable for RawDescription {
@@ -123,24 +102,6 @@ pub struct RawMeaning {
     pub langs: Vec<String>,
 }
 
-impl RawMeaning {
-    pub fn from(
-        new: NewMeaning,
-        id_gesture: Option<Uuid>,
-        id_description: Option<Uuid>,
-        id_meaning: Uuid,
-    ) -> Self {
-        let NewMeaning { value, langs, .. } = new;
-
-        Self {
-            id_description,
-            id_gesture,
-            id_meaning,
-            val: value,
-            langs,
-        }
-    }
-}
 impl Insertable for RawMeaning {
     fn insert_query(&self) -> String {
         format!(
@@ -186,17 +147,6 @@ pub struct RawPicture {
     pub langs: Vec<String>,
 }
 
-impl RawPicture {
-    pub fn from(new: NewPicture, id_gesture: Uuid, id_picture: Uuid) -> Self {
-        let NewPicture { langs, .. } = new;
-
-        Self {
-            id_picture,
-            id_gesture,
-            langs,
-        }
-    }
-}
 impl Insertable for RawPicture {
     fn insert_query(&self) -> String {
         format!(

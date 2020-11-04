@@ -7,10 +7,10 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 use tokio_postgres::{types::ToSql, Error, NoTls};
 use uuid::Uuid;
 
-mod model;
+mod models;
 
-use model::raw::*;
-pub use model::*;
+use models::raw::*;
+pub use models::*;
 
 pub fn connect_db() -> GestureClientPool {
     let (host, port, user, password, dbname) = (

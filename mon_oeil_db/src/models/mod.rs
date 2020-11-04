@@ -1,5 +1,7 @@
 pub(crate) mod raw;
 
+mod mappers;
+
 use raw::*;
 use std::cmp::{Eq, PartialEq};
 
