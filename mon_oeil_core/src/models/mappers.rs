@@ -1,15 +1,4 @@
-use mon_oeil_db as db;
-use serde::{Deserialize, Serialize};
-use std::cmp::{Eq, PartialEq};
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct Gesture {
-    pub id: String,
-    pub tags: Vec<String>,
-    pub descriptions: Vec<Description>,
-    pub meanings: Vec<Meaning>,
-    pub pictures: Vec<Picture>,
-}
+use super::*;
 
 impl From<db::Gesture> for Gesture {
     fn from(item: db::Gesture) -> Self {
@@ -30,14 +19,6 @@ impl From<db::Gesture> for Gesture {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct Description {
-    pub id: String,
-    pub value: String,
-    pub langs: Vec<String>,
-    pub meanings: Vec<Meaning>,
-}
-
 impl From<db::Description> for Description {
     fn from(item: db::Description) -> Self {
         let db::Description {
@@ -55,13 +36,6 @@ impl From<db::Description> for Description {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct Meaning {
-    pub id: String,
-    pub value: String,
-    pub langs: Vec<String>,
-}
-
 impl From<db::Meaning> for Meaning {
     fn from(item: db::Meaning) -> Self {
         let db::Meaning { id, value, langs } = item;
@@ -69,25 +43,11 @@ impl From<db::Meaning> for Meaning {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct Picture {
-    pub id: String,
-    pub langs: Vec<String>,
-}
-
 impl From<db::Picture> for Picture {
     fn from(item: db::Picture) -> Self {
         let db::Picture { id, langs } = item;
         Self { id, langs }
     }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct NewGesture {
-    pub tags: Vec<String>,
-    pub descriptions: Vec<NewDescription>,
-    pub meanings: Vec<NewMeaning>,
-    pub pictures: Vec<NewPicture>,
 }
 
 impl Into<db::NewGesture> for NewGesture {
@@ -107,13 +67,6 @@ impl Into<db::NewGesture> for NewGesture {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct NewDescription {
-    pub value: String,
-    pub langs: Vec<String>,
-    pub meanings: Vec<NewMeaning>,
-}
-
 impl Into<db::NewDescription> for NewDescription {
     fn into(self) -> db::NewDescription {
         let Self {
@@ -129,22 +82,11 @@ impl Into<db::NewDescription> for NewDescription {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct NewMeaning {
-    pub value: String,
-    pub langs: Vec<String>,
-}
-
 impl Into<db::NewMeaning> for NewMeaning {
     fn into(self) -> db::NewMeaning {
         let Self { value, langs } = self;
         db::NewMeaning { value, langs }
     }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct NewPicture {
-    pub langs: Vec<String>,
 }
 
 impl Into<db::NewPicture> for NewPicture {
