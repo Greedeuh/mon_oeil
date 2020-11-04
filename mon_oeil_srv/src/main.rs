@@ -27,7 +27,10 @@ async fn main() -> std::io::Result<()> {
                 mon_oeil_core::app_config(&mut config, &db_pool, &hs256_private_key);
             })
     })
-    .bind("0.0.0.0:8080")?
+    .bind(format!(
+        "0.0.0.0:{}",
+        std::env::var("PORT").expect("Need env var PORT")
+    ))?
     .run()
     .await
 }
