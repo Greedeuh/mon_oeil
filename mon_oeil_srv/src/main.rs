@@ -17,7 +17,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::new()
-                    .allowed_origin("http://localhost:8080")
+                    .allowed_origin("*")
                     .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
                     .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                     .allowed_header(http::header::CONTENT_TYPE)
@@ -29,7 +29,7 @@ async fn main() -> std::io::Result<()> {
                 mon_oeil_core::app_config(&mut config, &db_pool, &hs256_private_key);
             })
     })
-    .bind("127.0.0.1:8000")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }
