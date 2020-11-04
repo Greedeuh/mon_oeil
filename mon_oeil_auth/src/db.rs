@@ -1,5 +1,8 @@
 use super::*;
+use crate::models::*;
 use mon_oeil_db as db;
+
+// Wrapper for mon_oeil_db::GestureClientPool & mon_oeil_db::GestureClient
 
 #[cfg_attr(test, faux::create)]
 pub struct DbPool(db::GestureClientPool);
