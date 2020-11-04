@@ -1,3 +1,4 @@
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use frank_jwt::{decode, encode, Algorithm, Error, ValidationOptions};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -41,4 +42,20 @@ pub enum JwtValidationError {
     BadSignature,
     Expired,
     BadFormat,
+}
+
+pub struct Conf {
+    pub hs256_private_key: String,
+}
+
+pub fn valid_jwt_admin(
+    hs256_private_key: &str,
+    credentials: &BearerAuth,
+) -> Result<(), JwtValidationError> {
+    let user = decode_jwt(hs256_private_key, credentials.token())?;
+
+    match user.level {
+        Level::Admin => Ok(()),
+        // _ => Err(ApiError("Sorry u cant do that :(".to_owned())),
+    }
 }

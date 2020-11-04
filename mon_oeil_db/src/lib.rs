@@ -1,3 +1,5 @@
+use std::env;
+
 use deadpool_postgres::{Client, Config, ManagerConfig, Pool, RecyclingMethod};
 use futures::future;
 use linked_hash_map::LinkedHashMap;
@@ -9,6 +11,18 @@ mod model;
 
 use model::raw::*;
 pub use model::*;
+
+pub fn connect_db() -> GestureClientPool {
+    let (host, port, user, password, dbname) = (
+        env::var("PG_HOST").unwrap(),
+        env::var("PG_PORT").unwrap(),
+        env::var("PG_DB_NAME").unwrap(),
+        env::var("PG_USER").unwrap(),
+        env::var("PG_PWD").unwrap(),
+    );
+
+    GestureClientPool::connect(&host, &port, &user, &password, &dbname).unwrap()
+}
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct DbError(String);

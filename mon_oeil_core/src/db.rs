@@ -1,7 +1,6 @@
 use crate::model::*;
 use log::info;
 use mon_oeil_db as db;
-use std::env;
 
 #[cfg_attr(test, faux::create)]
 pub struct DbPool(db::GestureClientPool);
@@ -19,20 +18,6 @@ impl DbPool {
             .map_err(DbError::from)
             .map(|client| DbClient::new(client))
     }
-}
-
-pub fn connect_db() -> db::GestureClientPool {
-    dotenv::dotenv().ok();
-
-    let (host, port, user, password, dbname) = (
-        env::var("PG_HOST").unwrap(),
-        env::var("PG_PORT").unwrap(),
-        env::var("PG_DB_NAME").unwrap(),
-        env::var("PG_USER").unwrap(),
-        env::var("PG_PWD").unwrap(),
-    );
-
-    db::GestureClientPool::connect(&host, &port, &user, &password, &dbname).unwrap()
 }
 
 #[cfg_attr(test, faux::create)]

@@ -74,35 +74,20 @@ struct Conf {
     pub hs256_private_key: String,
 }
 
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
-    let hs256_private_key = std::env::var("HS256_PRIVATE_KEY").unwrap();
-
-    HttpServer::new(move || {
-        App::new()
-            .data(Conf {
-                hs256_private_key: hs256_private_key.clone(),
-            })
-            .data(Storage::new())
-            .wrap(Logger::default())
-            .route("/", web::post().to(upload))
-            .route("/{id}", web::delete().to(delete))
-    })
-    .bind("127.0.0.1:8088")?
-    .run()
-    .await
+pub fn app_config(
+    config: &mut web::ServiceConfig,
+    db_pool: &mon_oeil_db::GestureClientPool,
+    hs256_private_key: &str,
+) {
+    config
+        .data(Conf {
+            hs256_private_key: hs256_private_key.to_owned(),
+        })
+        .route("/", web::post().to(upload))
+.route("/{id}", web::delete().to(delete))
+;
 }
 
-fn valid_jwt_admin(hs256_private_key: &str, credentials: &BearerAuth) -> Result<(), ApiError> {
-    let user = mon_oeil_auth_shared::decode_jwt(hs256_private_key, credentials.token())
-        .map_err(|_| ApiError("Auth fail".to_owned()))?;
-
-    match user.level {
-        mon_oeil_auth_shared::Level::Admin => Ok(()),
-        // _ => Err(ApiError("Sorry u cant do that :(".to_owned())),
-    }
-}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Fail)]
 #[fail(display = "{}", _0)]

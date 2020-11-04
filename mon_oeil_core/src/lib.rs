@@ -1,254 +1,56 @@
-use actix_web::{
-    error, http, middleware::Logger, web, web::Json, App, HttpRequest, HttpResponse, HttpServer,
-    Responder, Result,
-};
-use dotenv;
-use env_logger::Env;
+use actix_web::{error, http, web};
 use failure::Fail;
 use serde::{Deserialize, Serialize};
+
 mod db;
+mod handlers;
 mod model;
-use actix_cors::Cors;
-use actix_web_httpauth::extractors::bearer::BearerAuth;
-use model::*;
-use mon_oeil_auth_shared;
 
-async fn get_gestures(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-) -> Result<impl Responder, ApiError> {
-    let gestures = db.get().await.map_err(ApiError::from)?;
-    let gestures = gestures.gestures().await.map_err(ApiError::from)?;
+use handlers::*;
+use mon_oeil_auth_shared as auth;
 
-    Ok(Json(gestures))
+pub fn app_config(
+    config: &mut web::ServiceConfig,
+    db_pool: &mon_oeil_db::GestureClientPool,
+    hs256_private_key: &str,
+) {
+    config
+        .data(db::DbPool::new(db_pool.clone()))
+        .data(Conf {
+            hs256_private_key: hs256_private_key.to_owned(),
+        })
+        .route("/gestures", web::get().to(get_gestures))
+        .route("/gestures", web::post().to(post_gesture))
+        .route("/gestures/{id}", web::delete().to(delete_gesture))
+        .route(
+            "/gestures/{id_gesutre}/descriptions",
+            web::post().to(post_description),
+        )
+        .route("/description", web::delete().to(delete_description))
+        .route(
+            "/gestures/{id_gesutre}/meanings",
+            web::post().to(post_gesture_s_meaning),
+        )
+        .route(
+            "/descriptions/{id_description}/meanings",
+            web::post().to(post_description_s_meaning),
+        )
+        .route("/meanings", web::delete().to(delete_meaning))
+        .route(
+            "/gestures/{id_gesutre}/pictures",
+            web::post().to(post_picture_meta),
+        )
+        .route("/pictures", web::delete().to(delete_picture))
+        .route("/*", web::method(http::Method::OPTIONS).to(delete_picture));
 }
 
-async fn post_gesture(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    gesture: web::Json<NewGesture>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-
-    let gesture = gesture.into_inner();
-
-    let client = db.get().await.map_err(ApiError::from)?;
-    client.add_gesture(gesture).await.map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Created().finish())
-}
-
-async fn delete_gesture(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id: web::Path<String>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .delete_gesture_cascade(&id)
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Ok().finish())
-}
-
-async fn post_description(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id_gesture: web::Path<String>,
-    description: web::Json<NewDescription>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let description = description.into_inner();
-
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .add_description(description, &id_gesture)
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Created().finish())
-}
-
-async fn delete_description(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id: web::Path<String>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .delete_description_cascade(&id)
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Ok().finish())
-}
-
-async fn post_gesture_s_meaning(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id_gesture: web::Path<String>,
-    meaning: web::Json<NewMeaning>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let meaning = meaning.into_inner();
-
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .add_meaning(meaning, Some(&id_gesture), None)
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Created().finish())
-}
-
-async fn post_description_s_meaning(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id_descirption: web::Path<String>,
-    meaning: web::Json<NewMeaning>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let meaning = meaning.into_inner();
-
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .add_meaning(meaning, None, Some(&id_descirption))
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Created().finish())
-}
-
-async fn delete_meaning(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id: web::Path<String>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let client = db.get().await.map_err(ApiError::from)?;
-    client.delete_meaning(&id).await.map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Ok().finish())
-}
-
-async fn post_picture_meta(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id_gesture: web::Path<String>,
-    picture: web::Json<NewPicture>,
-) -> Result<HttpResponse, ApiError> {
-    let picture = picture.into_inner();
-
-    let client = db.get().await.map_err(ApiError::from)?;
-    client
-        .add_picture(picture, &id_gesture)
-        .await
-        .map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Created().finish())
-}
-
-async fn delete_picture(
-    _req: HttpRequest,
-    db: web::Data<db::DbPool>,
-    id: web::Path<String>,
-    conf: web::Data<Conf>,
-    credentials: BearerAuth,
-) -> Result<HttpResponse, ApiError> {
-    valid_jwt_admin(&conf.hs256_private_key, &credentials)?;
-    let client = db.get().await.map_err(ApiError::from)?;
-    client.delete_picture(&id).await.map_err(ApiError::from)?;
-
-    Ok(HttpResponse::Ok().finish())
-}
-
-struct Conf {
+pub struct Conf {
     pub hs256_private_key: String,
-}
-
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
-    env_logger::from_env(Env::default().default_filter_or("info")).init();
-    let hs256_private_key = std::env::var("HS256_PRIVATE_KEY").unwrap();
-
-    let db_pool = db::connect_db();
-
-    HttpServer::new(move || {
-        App::new()
-            .wrap(Logger::default())
-            .wrap(
-                Cors::new()
-                    .allowed_origin("http://localhost:8080")
-                    .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
-                    .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                    .allowed_header(http::header::CONTENT_TYPE)
-                    .max_age(3600)
-                    .finish(),
-            )
-            .data(db::DbPool::new(db_pool.clone()))
-            .data(Conf {
-                hs256_private_key: hs256_private_key.clone(),
-            })
-            .route("/gestures", web::get().to(get_gestures))
-            .route("/gestures", web::post().to(post_gesture))
-            .route("/gestures/{id}", web::delete().to(delete_gesture))
-            .route(
-                "/gestures/{id_gesutre}/descriptions",
-                web::post().to(post_description),
-            )
-            .route("/description", web::delete().to(delete_description))
-            .route(
-                "/gestures/{id_gesutre}/meanings",
-                web::post().to(post_gesture_s_meaning),
-            )
-            .route(
-                "/descriptions/{id_description}/meanings",
-                web::post().to(post_description_s_meaning),
-            )
-            .route("/meanings", web::delete().to(delete_meaning))
-            .route(
-                "/gestures/{id_gesutre}/pictures",
-                web::post().to(post_picture_meta),
-            )
-            .route("/pictures", web::delete().to(delete_picture))
-            .route("/*", web::method(http::Method::OPTIONS).to(delete_picture))
-    })
-    .bind("127.0.0.1:8000")?
-    .run()
-    .await
-}
-
-fn valid_jwt_admin(hs256_private_key: &str, credentials: &BearerAuth) -> Result<(), ApiError> {
-    let user = mon_oeil_auth_shared::decode_jwt(hs256_private_key, credentials.token())
-        .map_err(|_| ApiError("Auth fail".to_owned()))?;
-
-    match user.level {
-        mon_oeil_auth_shared::Level::Admin => Ok(()),
-        // _ => Err(ApiError("Sorry u cant do that :(".to_owned())),
-    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Fail)]
 #[fail(display = "my error")]
-struct ApiError(pub String);
+pub struct ApiError(pub String);
 
 // Use default implementation for `error_response()` method
 impl error::ResponseError for ApiError {}
@@ -259,15 +61,22 @@ impl From<db::DbError> for ApiError {
     }
 }
 
+impl From<auth::JwtValidationError> for ApiError {
+    fn from(err: auth::JwtValidationError) -> ApiError {
+        ApiError(format!("{:?}", err))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use model::*;
     const ADMIN_TOKEN: &str = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
 
     #[cfg(test)]
     mod api {
         use super::*;
-        use actix_web::{test, web, App};
+        use actix_web::{middleware::Logger, test, web, App};
         use bytes::Bytes;
 
         #[actix_rt::test]
