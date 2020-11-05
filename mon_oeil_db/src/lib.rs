@@ -16,9 +16,9 @@ pub fn connect_db() -> GestureClientPool {
     let (host, port, user, password, dbname) = (
         env::var("PG_HOST").unwrap(),
         env::var("PG_PORT").unwrap(),
-        env::var("PG_DB_NAME").unwrap(),
         env::var("PG_USER").unwrap(),
         env::var("PG_PWD").unwrap(),
+        env::var("PG_DB_NAME").unwrap(),
     );
 
     GestureClientPool::connect(&host, &port, &user, &password, &dbname).unwrap()
@@ -74,7 +74,7 @@ impl GestureClientPool {
             .0
             .get()
             .await
-            .map_err(|e| DbError(format!("Getting pool failed {:?}", e)))?;
+            .map_err(|e| DbError(format!("Getting pool failed {:?} {}", e, e)))?;
 
         Ok(GestureClient { client })
     }

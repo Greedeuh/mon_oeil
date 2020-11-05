@@ -1,1 +1,5 @@
 target
+dev.env
+Dockerfile
+.gitignore
+.dockerignore
