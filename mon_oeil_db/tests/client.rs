@@ -1,4 +1,3 @@
-use dotenv;
 use mon_oeil_db::*;
 use std::env::var;
 use tokio_postgres::NoTls;
