@@ -37,6 +37,8 @@ jobs:
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: db_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -59,7 +61,7 @@ jobs:
         env:
           PG_HOST: localhost
           PG_PORT: 5432
-          PG_DB_NAME: postgres
+          PG_DB_NAME: db
           PG_USER: postgres
           PG_PWD: postgres
 
