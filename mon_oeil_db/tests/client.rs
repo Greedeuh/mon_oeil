@@ -1,9 +1,13 @@
+#[macro_use]
+extern crate serial_test;
+
 use mon_oeil_db::*;
 use std::env::var;
 use tokio_postgres::NoTls;
 use tokio_test::block_on;
 
 #[test]
+#[serial]
 fn connect_should_succeed() {
     let (host, port, dbname, user, password) = db_conf();
     let client = GestureClientPool::connect(&host, &port, &user, &password, &dbname);
@@ -11,6 +15,7 @@ fn connect_should_succeed() {
 }
 
 #[test]
+#[serial]
 fn connect_and_get_should_succeed() {
     let (host, port, dbname, user, password) = db_conf();
     let client = GestureClientPool::connect(&host, &port, &user, &password, &dbname);
@@ -23,6 +28,7 @@ mod gestures {
     use super::*;
 
     #[test]
+    #[serial]
     fn user() {
         reset_db();
         insert_user();
@@ -44,6 +50,7 @@ mod gestures {
     }
 
     #[test]
+    #[serial]
     fn no_gesture_in_db_should_return_nothing() {
         reset_db();
 
@@ -60,6 +67,7 @@ mod gestures {
     }
 
     #[test]
+    #[serial]
     fn gesture_without_links_in_db_should_return_them() {
         insert_gesture_without_links();
 
@@ -86,6 +94,7 @@ mod gestures {
     }
 
     #[test]
+    #[serial]
     fn _2_gestures_with_full_links_in_db_should_return_them() {
         insert_2_gestures_with_full_links();
 
@@ -183,6 +192,7 @@ mod delete_gesture {
     use super::*;
 
     #[test]
+    #[serial]
     fn nothing_in_db_should_throw() {
         reset_db();
 
@@ -203,6 +213,7 @@ mod delete_gesture {
     }
 
     #[test]
+    #[serial]
     fn _1_of_2_should_return_1() {
         insert_2_gestures_with_full_links();
 
@@ -249,6 +260,7 @@ mod delete_decription {
     use super::*;
 
     #[test]
+    #[serial]
     fn nothing_in_db_should_throw() {
         reset_db();
 
@@ -269,6 +281,7 @@ mod delete_decription {
     }
 
     #[test]
+    #[serial]
     fn _1_of_1gesture_should_return_gestures_updated() {
         insert_2_gestures_with_full_links();
 
@@ -349,6 +362,7 @@ mod delete_meanings {
     use super::*;
 
     #[test]
+    #[serial]
     fn nothing_in_db_should_throw() {
         reset_db();
 
@@ -369,6 +383,7 @@ mod delete_meanings {
     }
 
     #[test]
+    #[serial]
     fn _1_of_1gesture_should_return_gestures_updated() {
         insert_2_gestures_with_full_links();
 
@@ -455,6 +470,7 @@ mod delete_meanings {
     }
 
     #[test]
+    #[serial]
     fn _1_of_1description_should_return_gestures_updated() {
         insert_2_gestures_with_full_links();
 
@@ -547,6 +563,7 @@ mod delete_picture {
     use super::*;
 
     #[test]
+    #[serial]
     fn nothing_in_db_should_throw() {
         reset_db();
 
@@ -567,6 +584,7 @@ mod delete_picture {
     }
 
     #[test]
+    #[serial]
     fn _1_of_1description_should_return_gestures_updated() {
         insert_2_gestures_with_full_links();
 
@@ -660,6 +678,7 @@ mod add {
     use super::*;
 
     #[test]
+    #[serial]
     fn gesture() {
         reset_db();
 
@@ -775,6 +794,7 @@ mod add {
     }
 
     #[test]
+    #[serial]
     fn description() {
         insert_gesture_without_links();
 
@@ -837,6 +857,7 @@ mod add {
     }
 
     #[test]
+    #[serial]
     fn gesture_s_meaning() {
         insert_gesture_without_links();
 
@@ -878,6 +899,7 @@ mod add {
     }
 
     #[test]
+    #[serial]
     fn description_s_meaning() {
         insert_gesture_with_description();
 
@@ -924,6 +946,7 @@ mod add {
     }
 
     #[test]
+    #[serial]
     fn picture() {
         insert_gesture_without_links();
 

@@ -17,3 +17,4 @@ uuid = {version = "0.8", features = ["v4"]}
 [dev-dependencies]
 dotenv = "0.15"
 tokio-test = "0.2"
+serial_test = "0.5.0"
