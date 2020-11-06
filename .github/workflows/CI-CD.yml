@@ -32,7 +32,6 @@ jobs:
     needs: check
     name: Test Suite
     runs-on: ubuntu-latest
-    container: ubuntu-latest
     services:
       postgres:
         image: postgres
