@@ -25,12 +25,33 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
+        env:
+          PG_HOST: localhost
+          PG_PORT: 5432
+          PG_DB_NAME: db
+          PG_USER: postgres
+          PG_PWD: postgres
         with:
           profile: minimal
           toolchain: stable
