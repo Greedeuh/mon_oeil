@@ -32,7 +32,7 @@ jobs:
     needs: check
     name: Test Suite
     runs-on: ubuntu-latest
-    container: node:10.18-jessie
+    container: gcr.io/distroless/cc-debian10
     services:
       postgres:
         image: postgres
