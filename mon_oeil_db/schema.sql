@@ -36,9 +36,3 @@ CREATE TABLE users
     username       text PRIMARY KEY,
     PASSWORD    text
 );
-
-GRANT ALL ON TABLE public.descriptions TO mon_oeil;
-GRANT ALL ON TABLE public.gestures TO mon_oeil;
-GRANT ALL ON TABLE public.meanings TO mon_oeil;
-GRANT ALL ON TABLE public.pictures TO mon_oeil;
-GRANT ALL ON TABLE public.users TO mon_oeil;

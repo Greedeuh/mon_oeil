@@ -1046,17 +1046,13 @@ fn insert_2_gestures_with_full_links() {
 }
 
 fn reset_db() {
+    use std::fs;
+    let schema = fs::read_to_string("schema.sql").expect("Schema.sql not found!");
+    let schema: &str = &schema;
     block_on(async {
         let client = connect().await;
 
-        client.execute("DELETE FROM gestures", &[]).await.unwrap();
-        client
-            .execute("DELETE FROM descriptions", &[])
-            .await
-            .unwrap();
-        client.execute("DELETE FROM meanings", &[]).await.unwrap();
-        client.execute("DELETE FROM pictures", &[]).await.unwrap();
-        client.execute("DELETE FROM users", &[]).await.unwrap();
+        client.batch_execute(schema).await.unwrap();
     })
 }
 
