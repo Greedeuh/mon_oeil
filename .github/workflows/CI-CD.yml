@@ -6,7 +6,7 @@ on:
     branches:
       - master
 
-name: Continuous integration
+name: CI/CD
 
 jobs:
   check:
@@ -53,6 +53,13 @@ jobs:
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.45.0
+          override: true
+
+      - name: Run cargo-tarpaulin
+        uses: actions-rs/tarpaulin@v0.1
         env:
           PG_HOST: localhost
           PG_PORT: 5432
@@ -60,14 +67,19 @@ jobs:
           PG_USER: postgres
           PG_PWD: postgres
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          version: "0.9.0"
+          args: "-- --test-threads 1"
 
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v1.0.2
         with:
-          command: test
+          token: ${{secrets.CODECOV_TOKEN}}
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
 
   lints:
     needs: check

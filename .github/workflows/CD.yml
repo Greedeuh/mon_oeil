@@ -1,5 +1,0 @@
-name: CD (Google Cloud Run)
-on:
-  push:
-    branches:
-      - "master"
