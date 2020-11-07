@@ -2,6 +2,8 @@ use actix_cors::Cors;
 use actix_web::{http, middleware::Logger, App, HttpServer};
 use env_logger::Env;
 
+mod core;
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
@@ -24,7 +26,7 @@ async fn main() -> std::io::Result<()> {
             )
             .configure(|mut config| {
                 mon_oeil_auth::app_config(&mut config, &db_pool, &hs256_private_key);
-                mon_oeil_core::app_config(&mut config, &db_pool, &hs256_private_key);
+                core::app_config(&mut config, &db_pool, &hs256_private_key);
             })
     })
     .bind(format!(
@@ -34,3 +36,9 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
+pub struct Conf {
+    pub hs256_private_key: String,
+}
+
+struct ApiError<T>(T);

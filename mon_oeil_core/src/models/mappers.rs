@@ -96,6 +96,12 @@ impl Into<db::NewPicture> for NewPicture {
     }
 }
 
+impl From<db::DbError> for DbError {
+    fn from(err: db::DbError) -> DbError {
+        DbError(format!("{:?}", err))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -102,12 +102,3 @@ impl DbClient {
         self.0.delete_meaning(id).await.map_err(DbError::from)
     }
 }
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct DbError(String);
-
-impl From<db::DbError> for DbError {
-    fn from(err: db::DbError) -> DbError {
-        DbError(format!("{:?}", err))
-    }
-}

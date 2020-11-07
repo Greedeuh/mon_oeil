@@ -44,15 +44,8 @@ pub enum JwtValidationError {
     BadFormat,
 }
 
-pub struct Conf {
-    pub hs256_private_key: String,
-}
-
-pub fn valid_jwt_admin(
-    hs256_private_key: &str,
-    credentials: &BearerAuth,
-) -> Result<(), JwtValidationError> {
-    let user = decode_jwt(hs256_private_key, credentials.token())?;
+pub fn valid_jwt_admin(hs256_private_key: &str, jwt: &str) -> Result<(), JwtValidationError> {
+    let user = decode_jwt(hs256_private_key, jwt)?;
 
     match user.level {
         Level::Admin => Ok(()),

@@ -5,18 +5,12 @@ name = "mon_oeil_core"
 version = "0.1.0"
 
 [dependencies]
-actix = "0.9.0"
-actix-web = "2.0.0"
-actix_derive = "0.5.0"
-actix-rt = "1.1.1"
-bytes = "0.5.6"
-failure = "0.1.8"
 log = "0.4.11"
 mon_oeil_auth_shared = {path = "../mon_oeil_auth_shared"}
 mon_oeil_db = {path = "../mon_oeil_db"}
-serde = {version = "1.0.115", features = ["derive"]}
-serde_json = "1.0.57"
-actix-web-httpauth = "0.4.2"
+serde = {version = "1.0.117", features = ["derive"]}
+serde_json = "1.0.59"
 
 [dev-dependencies]
-faux = "0.0.5"
+faux = "0.0.6"
+tokio = {version = "0.3.3", features = ["macros", "rt-multi-thread"] }
