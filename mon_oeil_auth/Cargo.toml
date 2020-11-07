@@ -23,6 +23,7 @@ mon_oeil_auth_shared = {path = "../mon_oeil_auth_shared"}
 chrono = "0.4"
 mon_oeil_db = {path = "../mon_oeil_db"}
 actix-cors = "0.2.0"
+futures = "0.3.7"
 
 [dev-dependencies]
 faux = "0.0.5"

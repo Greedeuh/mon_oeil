@@ -1,4 +1,3 @@
-use super::*;
 use crate::models::*;
 use mon_oeil_db as db;
 
@@ -31,21 +30,5 @@ impl DbClient {
     pub async fn get_user(&self, username: &str) -> Result<Option<User>, DbError> {
         let user = self.0.get_user(username).await.map_err(DbError::from)?;
         Ok(user.map(User::from))
-    }
-}
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct DbError(String);
-
-impl From<db::DbError> for DbError {
-    fn from(err: db::DbError) -> DbError {
-        DbError(format!("{:?}", err))
-    }
-}
-
-impl From<db::User> for User {
-    fn from(user: db::User) -> User {
-        let db::User { username, password } = user;
-        User { username, password }
     }
 }

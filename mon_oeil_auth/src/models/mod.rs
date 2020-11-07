@@ -1,4 +1,8 @@
 use serde::{Deserialize, Serialize};
+
+mod mappers;
+pub use mappers::*;
+
 #[derive(Deserialize, Serialize)]
 pub struct Credentials {
     pub username: String,
@@ -10,3 +14,12 @@ pub struct User {
     pub username: String,
     pub password: String,
 }
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+pub enum ApiError {
+    Bug(String),
+    Auth,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct DbError(String);

@@ -1411,6 +1411,7 @@ dependencies = [
  "env_logger",
  "failure",
  "faux",
+ "futures",
  "log",
  "mon_oeil_auth_shared",
  "mon_oeil_db",

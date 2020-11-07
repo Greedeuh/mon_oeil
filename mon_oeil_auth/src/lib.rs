@@ -1,6 +1,4 @@
-use actix_web::{error, web, Result};
-use failure::Fail;
-use serde::{Deserialize, Serialize};
+use actix_web::web;
 
 mod db;
 mod handlers;
@@ -23,17 +21,4 @@ pub fn app_config(
         })
         .data(db::DbPool::new(db_pool.clone()))
         .route("/login", web::post().to(login));
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Fail)]
-#[fail(display = "my error")]
-pub struct ApiError(pub String);
-
-// Use default implementation for `error_response()` method
-impl error::ResponseError for ApiError {}
-
-impl From<db::DbError> for ApiError {
-    fn from(err: db::DbError) -> ApiError {
-        ApiError(format!("{:?}", err))
-    }
 }
