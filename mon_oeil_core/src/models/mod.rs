@@ -62,3 +62,9 @@ pub struct NewPicture {
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct DbError(String);
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+pub enum Error {
+    Bug(String),
+    Auth,
+}

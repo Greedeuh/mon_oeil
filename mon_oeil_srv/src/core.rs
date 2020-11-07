@@ -1,10 +1,9 @@
 use actix_web::{error, web, web::Json, Error, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::error;
-use serde::Deserialize;
 
 use crate::{ApiError, Conf};
-use mon_oeil_core::{db, handlers, models::*};
+use mon_oeil_core::*;
 
 pub fn app_config(
     config: &mut web::ServiceConfig,
@@ -64,7 +63,7 @@ async fn get_gestures(
 ) -> Result<impl Responder, ApiError<mon_oeil_core::Error>> {
     handlers::get_gestures(&db)
         .await
-        .map(|res| Json(res))
+        .map(Json)
         .map_err(ApiError::from)
 }
 

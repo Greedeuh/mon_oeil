@@ -2,6 +2,7 @@ use actix_cors::Cors;
 use actix_web::{http, middleware::Logger, App, HttpServer};
 use env_logger::Env;
 
+mod auth;
 mod core;
 
 #[actix_rt::main]
@@ -25,7 +26,7 @@ async fn main() -> std::io::Result<()> {
                     .finish(),
             )
             .configure(|mut config| {
-                mon_oeil_auth::app_config(&mut config, &db_pool, &hs256_private_key);
+                auth::app_config(&mut config, &db_pool, &hs256_private_key);
                 core::app_config(&mut config, &db_pool, &hs256_private_key);
             })
     })

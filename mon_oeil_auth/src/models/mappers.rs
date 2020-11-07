@@ -1,9 +1,9 @@
 use super::*;
 use mon_oeil_db as db;
 
-impl From<DbError> for ApiError {
-    fn from(err: DbError) -> ApiError {
-        ApiError::Bug(format!("{:?}", err))
+impl From<DbError> for Error {
+    fn from(err: DbError) -> Error {
+        Error::Bug(format!("{:?}", err))
     }
 }
 

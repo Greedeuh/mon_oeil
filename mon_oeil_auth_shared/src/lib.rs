@@ -1,4 +1,3 @@
-use actix_web_httpauth::extractors::bearer::BearerAuth;
 use frank_jwt::{decode, encode, Algorithm, Error, ValidationOptions};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

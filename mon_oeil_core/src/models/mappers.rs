@@ -1,4 +1,5 @@
 use super::*;
+use mon_oeil_auth_shared as auth;
 
 impl From<db::Gesture> for Gesture {
     fn from(item: db::Gesture) -> Self {
@@ -99,6 +100,18 @@ impl Into<db::NewPicture> for NewPicture {
 impl From<db::DbError> for DbError {
     fn from(err: db::DbError) -> DbError {
         DbError(format!("{:?}", err))
+    }
+}
+
+impl From<DbError> for Error {
+    fn from(err: DbError) -> Error {
+        Error::Bug(format!("{:?}", err))
+    }
+}
+
+impl From<auth::JwtValidationError> for Error {
+    fn from(_err: auth::JwtValidationError) -> Error {
+        Error::Auth
     }
 }
 

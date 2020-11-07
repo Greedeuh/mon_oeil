@@ -16,7 +16,7 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub enum ApiError {
+pub enum Error {
     Bug(String),
     Auth,
 }
