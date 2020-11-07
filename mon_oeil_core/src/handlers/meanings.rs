@@ -49,7 +49,7 @@ pub async fn delete_meaning(
 mod tests {
     use super::*;
 
-    const ADMIN_TOKEN: &str = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
+    const ADMIN_TOKEN: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
     const HS256_PRIVATE_KEY: &str = "private_key";
 
     #[tokio::test]
@@ -65,8 +65,9 @@ mod tests {
             value: "Un petit meaning".to_owned(),
             langs: vec!["fr".to_owned(), "us".to_owned()],
         };
-        let res = post_gesture_s_meaning(&pool, "id", new_meaning, HS256_PRIVATE_KEY, ADMIN_TOKEN);
-        assert!(res.await.is_ok());
+        let res =
+            post_gesture_s_meaning(&pool, "id", new_meaning, HS256_PRIVATE_KEY, ADMIN_TOKEN).await;
+        assert!(res.is_ok());
     }
 
     #[tokio::test]
@@ -83,8 +84,9 @@ mod tests {
             langs: vec!["fr".to_owned(), "us".to_owned()],
         };
         let res =
-            post_description_s_meaning(&pool, "id", new_meaning, HS256_PRIVATE_KEY, ADMIN_TOKEN);
-        assert!(res.await.is_ok());
+            post_description_s_meaning(&pool, "id", new_meaning, HS256_PRIVATE_KEY, ADMIN_TOKEN)
+                .await;
+        assert!(res.is_ok());
     }
 
     #[tokio::test]
@@ -97,7 +99,7 @@ mod tests {
         }
         faux::when!(pool.get).once().safe_then(move |_| Ok(client));
 
-        let res = super::delete_meaning(&pool, "id", HS256_PRIVATE_KEY, ADMIN_TOKEN);
-        assert!(res.await.is_ok());
+        let res = super::delete_meaning(&pool, "id", HS256_PRIVATE_KEY, ADMIN_TOKEN).await;
+        assert!(res.is_ok());
     }
 }

@@ -37,7 +37,7 @@ pub async fn delete_gesture(
 mod tests {
     use super::*;
 
-    const ADMIN_TOKEN: &str = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
+    const ADMIN_TOKEN: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
     const HS256_PRIVATE_KEY: &str = "private_key";
 
     #[tokio::test]
@@ -120,10 +120,10 @@ mod tests {
         });
         faux::when!(pool.get).once().safe_then(move |_| Ok(client));
 
-        let res = super::get_gestures(&pool);
+        let res = super::get_gestures(&pool).await;
 
         assert_eq!(
-            res.await,
+            res,
             Ok(vec![
                 Gesture {
                     id: "ce27c124-e47b-490f-b8fe-3f37d5dbbef6".to_owned(),
@@ -248,9 +248,9 @@ mod tests {
                 },
             ],
         };
-        let res = post_gesture(&pool, new_gesture, HS256_PRIVATE_KEY, ADMIN_TOKEN);
+        let res = post_gesture(&pool, new_gesture, HS256_PRIVATE_KEY, ADMIN_TOKEN).await;
 
-        assert!(res.await.is_ok());
+        assert!(res.is_ok());
     }
 
     #[tokio::test]
@@ -263,8 +263,8 @@ mod tests {
         }
         faux::when!(pool.get).once().safe_then(move |_| Ok(client));
 
-        let res = super::delete_gesture(&pool, "id", HS256_PRIVATE_KEY, ADMIN_TOKEN);
+        let res = super::delete_gesture(&pool, "id", HS256_PRIVATE_KEY, ADMIN_TOKEN).await;
 
-        assert!(res.await.is_ok());
+        assert!(res.is_ok());
     }
 }

@@ -1,9 +1,7 @@
-use actix_cors::Cors;
-use actix_web::{http, middleware::Logger, App, HttpServer};
+use actix_web::{middleware::Logger, App, HttpServer};
 use env_logger::Env;
 
-mod auth;
-mod core;
+use mon_oeil_srv::{auth, core, cors};
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -16,15 +14,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .wrap(
-                Cors::new()
-                    .allowed_origin("*")
-                    .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
-                    .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                    .allowed_header(http::header::CONTENT_TYPE)
-                    .max_age(3600)
-                    .finish(),
-            )
+            .wrap(cors())
             .configure(|mut config| {
                 auth::app_config(&mut config, &db_pool, &hs256_private_key);
                 core::app_config(&mut config, &db_pool, &hs256_private_key);
@@ -37,9 +27,3 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-
-pub struct Conf {
-    pub hs256_private_key: String,
-}
-
-struct ApiError<T>(T);

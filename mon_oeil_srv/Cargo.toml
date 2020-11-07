@@ -23,3 +23,10 @@ serde = {version = "1.0.115", features = ["derive"]}
 serde_json = "1.0.57"
 actix-web-httpauth = "0.4.2"
 actix-cors = "0.2.0"
+lazy_static = "1.4.0"
+
+[dev-dependencies]
+serial_test = "0.5.0"
+postgres = "0.18.1"
+mon_oeil_auth_shared = {path = "../mon_oeil_auth_shared"}
+
