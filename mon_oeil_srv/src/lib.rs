@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{dev::Server, http, middleware::Logger, App, HttpServer};
+use actix_web::{dev::Server, middleware::Logger, App, HttpServer};
 use std::net::TcpListener;
 
 pub mod auth;
