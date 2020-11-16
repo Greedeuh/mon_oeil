@@ -14,12 +14,12 @@
         <div id="descriptions">
           <Description
             v-for="d in gesture.descriptions"
-            :key="d.value"
+            :key="d.id"
             :description="d"
           />
         </div>
         <div id="meaning">
-          <Meaning v-for="m in gesture.meanings" :key="m.value" :meaning="m" />
+          <Meaning v-for="m in gesture.meanings" :key="m.id" :meaning="m" />
         </div>
       </div>
     </div>

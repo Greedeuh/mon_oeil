@@ -39,7 +39,7 @@ export default {
     update() {
       this.$store.dispatch("update_meaning", {
         id: this.meaning.id,
-        content: { value: this.value, langs: this.langs },
+        new_meaning: { value: this.value, langs: this.langs },
       });
     },
   },

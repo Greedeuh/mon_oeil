@@ -1,6 +1,8 @@
 <template>
   <div id="app">
     <loading :active.sync="loading" :is-full-page="true" />
+    <notifications group="app" />
+
     <button id="editor_mode" @click="toggle_editor_mode">EDITOR MODE</button>
     <Viewer id="viewer" :class="{ editor_mode: editor_mode }" />
     <Editor v-if="editor_mode" id="editor" />
@@ -28,6 +30,25 @@ export default {
     toggle_editor_mode() {
       this.$store.commit("toggle_editor_mode");
     },
+  },
+  created() {
+    this.$store.dispatch('load_all_gestures')
+    this.$store.subscribe((mutation, state) => {
+      if (mutation.type === "notif") {
+        let type;
+        if (state.notif.success) {
+          type = "success";
+        } else {
+          type = "error";
+        }
+        this.$notify({
+          group: 'app',
+          text: state.notif.msg,
+          type
+        });
+      }
+    })
+
   },
   computed: {
     ...mapGetters(['editor_mode', 'loading'])

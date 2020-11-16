@@ -5,7 +5,7 @@
     </div>
     <p>{{ description.value }}</p>
     <div id="meanings">
-      <Meaning v-for="m in description.meanings" :key="m.value" :meaning="m" />
+      <Meaning v-for="m in description.meanings" :key="m.id" :meaning="m" />
     </div>
   </div>
 </template>

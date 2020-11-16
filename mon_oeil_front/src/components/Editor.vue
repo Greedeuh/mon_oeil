@@ -8,12 +8,15 @@
         :key="description.id"
         :description="{ ...description }"
       />
+      <button @click="add_description">Ajouter une Description</button>
       <MeaningEditor
         v-for="meaning in selected_gesture.meanings"
         :key="meaning.id"
         :meaning="meaning"
         class="meaning"
       />
+      <button @click="add_meaning">Ajouter un Meaning</button>
+
       <PictureEditor v-for="picture in selected_gesture.pictures" :key="picture.id" :picture="picture"/>
     </div>
   </div>
@@ -32,7 +35,18 @@ export default {
   methods: {
     del(){
       this.$store.dispatch("del_gesture", this.selected_gesture.id);
-    }
+    },add_meaning() {
+      this.$store.dispatch("add_gesture_meaning", {
+        id_gesture: this.selected_gesture.id,
+        new_meaning: { value: "", langs: ["fr"] },
+      });
+    },
+    add_description() {
+      this.$store.dispatch("add_description", {
+        id_gesture: this.selected_gesture.id,
+        new_description: { value: "", langs: ["fr"] },
+      });
+    },
   },
   computed: {
     ...mapGetters(["selected_gesture"]),

@@ -53,13 +53,13 @@ export default {
     update() {
       this.$store.dispatch("update_description", {
         id: this.description.id,
-        content: { value: this.value, langs: this.langs },
+        new_description: { value: this.value, langs: this.langs },
       });
     },
     add_meaning() {
       this.$store.dispatch("add_description_meaning", {
-        id: this.description.id,
-        content: { value: "", langs: ["fr"] },
+        id_description: this.description.id,
+        new_meaning: { value: "", langs: ["fr"] },
       });
     },
   },

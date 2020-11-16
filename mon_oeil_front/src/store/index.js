@@ -1,6 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
+import { service } from '../service';
+
 Vue.use(Vuex);
 
 let mock_gestures = [
@@ -77,12 +79,16 @@ let mock_gestures = [
   },
 ];
 
+const notif_ok = { msg: "Action effectuée!", success: true };
+const notif_ko = { msg: "Oups ça n'a pas fonctionné :( Reviens plus tard", success: false };
+
 export default new Vuex.Store({
   state: {
     gestures: mock_gestures,
-    editor_mode: true,
+    editor_mode: false,
     selected_gesture_id: null,
     loading: false,
+    notif: null
   },
   getters: {
     gestures(state) {
@@ -99,6 +105,9 @@ export default new Vuex.Store({
     loading(state) {
       return state.loading;
     },
+    notif(state) {
+      return state.loading;
+    }
   },
   mutations: {
     toggle_editor_mode(state) {
@@ -113,64 +122,76 @@ export default new Vuex.Store({
     stop_loading(state) {
       state.loading = false;
     },
+    load_gestures(state, gestures) {
+      state.gestures = gestures;
+    },
+    notif(state, notif) {
+      state.notif = notif;
+    }
   },
   actions: {
+    load_all_gestures(context) {
+      service.get_all_gestures().then(gestures => context.commit("load_gestures",gestures)).catch(() => context.commit('notif', notif_ko))
+      context.commit("stop_loading");
+    },
     del_gesture(context, id) {
       context.commit("start_loading");
-      setTimeout(() => {
+      service.delete_gesture(id).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-      }, 1000);
+      });
     },
     del_description(context, id) {
       context.commit("start_loading");
-      setTimeout(() => {
+      service.delete_description(id).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-      }, 1000);
-    },
-    update_description(context, { id, content }) {
-      context.commit("start_loading");
-      setTimeout(() => {
-        context.commit("stop_loading");
-
-        id;
-        content;
-      }, 1000);
-    },
-    add_description_meaning(context, id) {
-      context.commit("start_loading");
-      setTimeout(() => {
-        context.commit("stop_loading");
-
-        id;
-      }, 1000);
+      });
     },
     del_meaning(context, id) {
       context.commit("start_loading");
-      setTimeout(() => {
+      service.delete_meaning(id).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-      }, 1000);
-    },
-    update_meaning(context, { id, content }) {
-      context.commit("start_loading");
-      setTimeout(() => {
-        context.commit("stop_loading");
-        id;
-        content;
-      }, 1000);
+      });
     },
     del_picture(context, id) {
       context.commit("start_loading");
-      setTimeout(() => {
+      service.delete_picture(id).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-      }, 1000);
+      });
+    },
+    update_description(context, { id, new_description }) {
+      context.commit("start_loading"); 
+      service.put_description(id, new_description).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
+    },
+    update_meaning(context, { id, new_meaning }) {
+      service.put_meaning(id, new_meaning).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
     },
     update_picture(context, { id, content }) {
       context.commit("start_loading");
@@ -189,5 +210,36 @@ export default new Vuex.Store({
         id;
       }, 1000);
     },
+    add_description_meaning(context, {id_description, new_meaning}) {
+      context.commit("start_loading"); 
+      service.post_description_meaning(id_description, new_meaning).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
+    },
+    add_gesture_meaning(context, {id_gesture, new_meaning}) {
+      context.commit("start_loading"); 
+      service.post_gesture_meaning(id_gesture, new_meaning).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
+    },
+    add_description(context, {id_gesture, new_description}) {
+      context.commit("start_loading"); 
+      service.post_description(id_gesture, new_description).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
+    },
   },
 });
+
