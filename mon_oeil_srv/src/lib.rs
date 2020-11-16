@@ -44,12 +44,7 @@ pub fn run_with_storage(
 }
 
 pub fn cors() -> Cors {
-    Cors::default()
-        .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
-        .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-        .allowed_header(http::header::CONTENT_TYPE)
-        .max_age(3600)
-        .send_wildcard()
+    Cors::permissive()
 }
 
 pub struct Conf {

@@ -21,7 +21,8 @@ pub mod setup {
             let db_pool = mon_oeil_db::connect_db();
             ConfTest {
                 db_pool,
-                hs256_private_key: "private_key".to_owned(),
+                hs256_private_key: var("HS256_PRIVATE_KEY")
+                    .expect("Need HS256_PRIVATE_KEY env var for test."),
             }
         };
     }

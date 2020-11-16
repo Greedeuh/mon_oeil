@@ -68,6 +68,8 @@ jobs:
           PG_USER_TEST: postgres
           PG_PWD_TEST: postgres
           GOOGLE_APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_AUTH_STORAGE}}
+          HS256_PRIVATE_KEY: private_key
+          GOOGLE_CLOUD_BUCKET: ${{secrets.GCLOUD_STORAGE_TEST}}
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
