@@ -62,11 +62,11 @@ jobs:
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         env:
-          PG_HOST_TEST: localhost
-          PG_PORT_TEST: 5432
-          PG_DB_NAME_TEST: db
-          PG_USER_TEST: postgres
-          PG_PWD_TEST: postgres
+          PG_HOST: localhost
+          PG_PORT: 5432
+          PG_DB_NAME: db
+          PG_USER: postgres
+          PG_PWD: postgres
           GOOGLE_APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_AUTH_STORAGE}}
           HS256_PRIVATE_KEY: private_key
           GOOGLE_CLOUD_BUCKET: ${{secrets.GCLOUD_STORAGE_TEST}}

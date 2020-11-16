@@ -14,11 +14,11 @@ pub use models::*;
 
 pub fn connect_db() -> GestureClientPool {
     let (host, port, user, password, dbname) = (
-        env::var("PG_HOST_TEST").unwrap(),
-        env::var("PG_PORT_TEST").unwrap(),
-        env::var("PG_USER_TEST").unwrap(),
-        env::var("PG_PWD_TEST").unwrap(),
-        env::var("PG_DB_NAME_TEST").unwrap(),
+        env::var("PG_HOST").unwrap(),
+        env::var("PG_PORT").unwrap(),
+        env::var("PG_USER").unwrap(),
+        env::var("PG_PWD").unwrap(),
+        env::var("PG_DB_NAME").unwrap(),
     );
 
     GestureClientPool::connect(&host, &port, &user, &password, &dbname).unwrap()

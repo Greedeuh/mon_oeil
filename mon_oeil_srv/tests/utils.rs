@@ -165,11 +165,11 @@ pub mod setup {
     pub fn db_conf() -> (String, String, String, String, String) {
         dotenv::dotenv().ok();
         (
-            var("PG_HOST_TEST").unwrap(),
-            var("PG_PORT_TEST").unwrap(),
-            var("PG_DB_NAME_TEST").unwrap(),
-            var("PG_USER_TEST").unwrap(),
-            var("PG_PWD_TEST").unwrap(),
+            var("PG_HOST").unwrap(),
+            var("PG_PORT").unwrap(),
+            var("PG_DB_NAME").unwrap(),
+            var("PG_USER").unwrap(),
+            var("PG_PWD").unwrap(),
         )
     }
 }
