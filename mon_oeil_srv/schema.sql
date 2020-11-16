@@ -6,14 +6,14 @@ DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE gestures (
 	id_gesture 	UUID PRIMARY KEY,
-    tags		text[]
+    tags		text[] NOT NULL
 );
 
 CREATE TABLE descriptions (
 	id_description 	UUID PRIMARY KEY,
 	id_gesture		UUID REFERENCES gestures ON DELETE CASCADE NOT NULL,
     val				text NOT NULL,
-    langs			text[]
+    langs			text[] NOT NULL
 );
 
 CREATE TABLE meanings (
@@ -21,18 +21,19 @@ CREATE TABLE meanings (
     id_description 	UUID REFERENCES descriptions ON DELETE CASCADE,
    	id_gesture 		UUID REFERENCES gestures ON DELETE CASCADE,
     val				text NOT NULL,
-    langs			text[]
+    langs			text[] NOT NULL
     CHECK (id_description IS NULL OR id_gesture IS NULL)
 );
 
 CREATE TABLE pictures (
 	id_picture 	UUID PRIMARY KEY,
 	id_gesture 	UUID REFERENCES gestures ON DELETE CASCADE NOT NULL,
-    langs		text[]
+    langs		text[] NOT NULL,
+    format		text NOT NULL
 );
 
 CREATE TABLE users
 (
-    username       text PRIMARY KEY,
-    PASSWORD    text
+    username    text PRIMARY KEY,
+    PASSWORD    text NOT NULL
 );

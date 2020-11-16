@@ -4,7 +4,7 @@ use deadpool_postgres::{Client, Config, ManagerConfig, Pool, RecyclingMethod};
 use futures::future;
 use linked_hash_map::LinkedHashMap;
 use tokio_pg_mapper::FromTokioPostgresRow;
-use tokio_postgres::{types::ToSql, Error, NoTls};
+use tokio_postgres::{error::SqlState, types::ToSql, Error, NoTls};
 use uuid::Uuid;
 
 mod models;
@@ -14,22 +14,31 @@ pub use models::*;
 
 pub fn connect_db() -> GestureClientPool {
     let (host, port, user, password, dbname) = (
-        env::var("PG_HOST").unwrap(),
-        env::var("PG_PORT").unwrap(),
-        env::var("PG_USER").unwrap(),
-        env::var("PG_PWD").unwrap(),
-        env::var("PG_DB_NAME").unwrap(),
+        env::var("PG_HOST_TEST").unwrap(),
+        env::var("PG_PORT_TEST").unwrap(),
+        env::var("PG_USER_TEST").unwrap(),
+        env::var("PG_PWD_TEST").unwrap(),
+        env::var("PG_DB_NAME_TEST").unwrap(),
     );
 
     GestureClientPool::connect(&host, &port, &user, &password, &dbname).unwrap()
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct DbError(String);
+pub enum DbError {
+    ForeignKeyViolation(String),
+    NotFound,
+    Other(String),
+}
 
 impl From<Error> for DbError {
     fn from(err: Error) -> DbError {
-        DbError(format!("{:?}", err))
+        match err.code().map(SqlState::code) {
+            Some(x) if x == SqlState::FOREIGN_KEY_VIOLATION.code() => {
+                DbError::ForeignKeyViolation(format!("{:?}", err))
+            }
+            _ => DbError::Other(format!("{:?}", err)),
+        }
     }
 }
 
@@ -50,7 +59,7 @@ impl GestureClientPool {
         cfg.port = Some(
             port.to_owned()
                 .parse()
-                .map_err(|e| DbError(format!("Config port err : {:?}", e)))?,
+                .map_err(|e| DbError::Other(format!("Config port err : {:?}", e)))?,
         );
         cfg.user = Some(user.to_owned());
         cfg.password = Some(password.to_owned());
@@ -61,7 +70,7 @@ impl GestureClientPool {
 
         let pool = cfg
             .create_pool(NoTls)
-            .map_err(|e| DbError(format!("Conf pool err : {:?}", e)))?;
+            .map_err(|e| DbError::Other(format!("Conf pool err : {:?}", e)))?;
 
         Ok(Self(pool))
     }
@@ -74,7 +83,7 @@ impl GestureClientPool {
             .0
             .get()
             .await
-            .map_err(|e| DbError(format!("Getting pool failed {:?} {}", e, e)))?;
+            .map_err(|e| DbError::Other(format!("Getting pool failed {:?} {}", e, e)))?;
 
         Ok(GestureClient { client })
     }
@@ -116,43 +125,48 @@ impl GestureClient {
         ))
     }
 
-    /// Add a gesture and nested data in db
-    pub async fn add_gesture(&self, gesture: NewGesture) -> Result<(), DbError> {
-        // flat nested structure as Insertable linked by ids
-        let (gesture, descriptions, meanings, pictures) = debunk_new_gesture(gesture);
+    /// Add a gesture in db
+    pub async fn add_gesture(&self, new_gesture: NewGesture) -> Result<String, DbError> {
+        let new_id = Uuid::new_v4();
+        insert(&self.client, RawGesture::from(new_gesture, new_id))
+            .await
+            .map(|_| new_id.to_hyphenated().to_string())
+    }
 
-        // future based inserts of each data
-        let g_req = insert(&self.client, gesture);
-        let d_reqs =
-            future::try_join_all(descriptions.into_iter().map(|d| insert(&self.client, d)));
-        let m_reqs = future::try_join_all(meanings.into_iter().map(|d| insert(&self.client, d)));
-        let p_reqs = future::try_join_all(pictures.into_iter().map(|d| insert(&self.client, d)));
-
-        // execute requests
-        let res = future::try_join4(g_req, d_reqs, m_reqs, p_reqs).await;
-
-        res.map(|_| ())
+    pub async fn update_gesture(
+        &self,
+        id: &str,
+        updatable_gesture: NewGesture,
+    ) -> Result<(), DbError> {
+        let id = Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        update(&self.client, InnerGesture::from(updatable_gesture, id)).await
     }
 
     /// Add a description and nested data in db for a gesture
     pub async fn add_description(
         &self,
-        description: NewDescription,
+        new_description: NewDescription,
         id_gesture: &str,
+    ) -> Result<String, DbError> {
+        let id_gesture = Uuid::parse_str(id_gesture)
+            .map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        let new_id = Uuid::new_v4();
+
+        insert(
+            &self.client,
+            RawDescription::from(new_description, id_gesture, new_id),
+        )
+        .await
+        .map(|_| new_id.to_hyphenated().to_string())
+    }
+
+    pub async fn update_description(
+        &self,
+        id: &str,
+        new_description: NewDescription,
     ) -> Result<(), DbError> {
-        let id_gesture =
-            Uuid::parse_str(id_gesture).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?;
-        // flat nested structure as Insertable linked by ids
-        let (description, meanings) = debunk_new_description(description, id_gesture);
-
-        // future based inserts of each data
-        let d_req = insert(&self.client, description);
-        let m_reqs = future::try_join_all(meanings.into_iter().map(|d| insert(&self.client, d)));
-
-        // execute requests
-        let res = future::try_join(d_req, m_reqs).await;
-
-        res.map(|_| ())
+        let id = Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        update(&self.client, InnerDescription::from(new_description, id)).await
     }
 
     /// Add a meaning in db for a gesture or description
@@ -161,44 +175,72 @@ impl GestureClient {
         meaning: NewMeaning,
         id_gesture: Option<&str>,
         id_description: Option<&str>,
-    ) -> Result<(), DbError> {
-        let id_gesture = match id_gesture
-            .map(|id| Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e))))
-        {
+    ) -> Result<String, DbError> {
+        let id_gesture = match id_gesture.map(|id| {
+            Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))
+        }) {
             Some(Err(e)) => return Err(e),
             Some(Ok(i)) => Some(i),
             None => None,
         };
-        let id_description = match id_description
-            .map(|id| Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e))))
-        {
+        let id_description = match id_description.map(|id| {
+            Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))
+        }) {
             Some(Err(e)) => return Err(e),
             Some(Ok(i)) => Some(i),
             None => None,
         };
 
-        let id_meaning = Uuid::new_v4();
+        let new_id = Uuid::new_v4();
 
         insert(
             &self.client,
-            RawMeaning::from(meaning, id_gesture, id_description, id_meaning),
+            RawMeaning::from(meaning, id_gesture, id_description, new_id),
         )
         .await
-        .map(|_| ())
+        .map(|_| new_id.to_hyphenated().to_string())
+    }
+
+    pub async fn update_meaning(&self, id: &str, new_meaning: NewMeaning) -> Result<(), DbError> {
+        let id = Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        update(&self.client, InnerMeaning::from(new_meaning, id)).await
     }
 
     /// Add a picture and nested data in db for a gesture
-    pub async fn add_picture(&self, picture: NewPicture, id_gesture: &str) -> Result<(), DbError> {
-        let id_gesture =
-            Uuid::parse_str(id_gesture).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?;
-        let id_picture = Uuid::new_v4();
+    pub async fn add_picture(
+        &self,
+        picture: NewPicture,
+        id_gesture: &str,
+    ) -> Result<String, DbError> {
+        let id_gesture = Uuid::parse_str(id_gesture)
+            .map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        let new_id = Uuid::new_v4();
 
-        insert(
+        insert(&self.client, RawPicture::from(picture, id_gesture, new_id))
+            .await
+            .map(|_| new_id.to_hyphenated().to_string())
+    }
+
+    pub async fn update_picture_meta(
+        &self,
+        id: &str,
+        new_picture_meta: NewPictureMeta,
+    ) -> Result<(), DbError> {
+        let id = Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        update(&self.client, InnerPictureMeta::from(new_picture_meta, id)).await
+    }
+
+    pub async fn update_picture_format(
+        &self,
+        id: &str,
+        new_picture_file_info: NewPictureFileInfo,
+    ) -> Result<(), DbError> {
+        let id = Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+        update(
             &self.client,
-            RawPicture::from(picture, id_gesture, id_picture),
+            PictureFileInfo::from(new_picture_file_info, id),
         )
         .await
-        .map(|_| ())
     }
 
     /// Delete gesture and nested object from db
@@ -207,7 +249,7 @@ impl GestureClient {
             &self.client,
             G_TABLE,
             ID_G_COL,
-            &Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?,
+            &Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?,
         )
         .await
     }
@@ -218,7 +260,7 @@ impl GestureClient {
             &self.client,
             D_TABLE,
             ID_D_COL,
-            &Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?,
+            &Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?,
         )
         .await
     }
@@ -229,7 +271,7 @@ impl GestureClient {
             &self.client,
             M_TABLE,
             ID_M_COL,
-            &Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?,
+            &Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?,
         )
         .await
     }
@@ -240,7 +282,7 @@ impl GestureClient {
             &self.client,
             P_TABLE,
             ID_P_COL,
-            &Uuid::parse_str(id).map_err(|e| DbError(format!("Wrong uuid {:?}", e)))?,
+            &Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?,
         )
         .await
     }
@@ -272,84 +314,6 @@ async fn select<T: FromTokioPostgresRow>(
         .collect())
 }
 
-/// Flatten gesture as Insertable
-fn debunk_new_gesture(
-    mut gesture: NewGesture,
-) -> (
-    RawGesture,
-    Vec<RawDescription>,
-    Vec<RawMeaning>,
-    Vec<RawPicture>,
-) {
-    let id_gesture = Uuid::new_v4();
-
-    // Flatten description as Insertable
-    let (descriptons, mut meanings) = gesture
-        .descriptions
-        .drain(..)
-        .map(|d| debunk_new_description(d, id_gesture))
-        .collect::<Vec<(RawDescription, Vec<RawMeaning>)>>()
-        .into_iter()
-        .fold(
-            (vec![], vec![]),
-            |(mut descriptions, mut meanings), (d, ms)| {
-                descriptions.push(d);
-                meanings.extend(ms);
-                (descriptions, meanings)
-            },
-        );
-
-    // meanings as Insertable
-    let gesture_s_meaning = gesture
-        .meanings
-        .drain(..)
-        .map(|m| {
-            let id_meaning = Uuid::new_v4();
-            RawMeaning::from(m, Some(id_gesture), None, id_meaning)
-        })
-        .collect::<Vec<RawMeaning>>();
-
-    // merge description's and gesture's meanings
-    meanings.extend(gesture_s_meaning);
-
-    // pictures as Insertable
-    let pictures = gesture
-        .pictures
-        .drain(..)
-        .map(|p| {
-            let id_picture = Uuid::new_v4();
-            RawPicture::from(p, id_gesture, id_picture)
-        })
-        .collect::<Vec<RawPicture>>();
-
-    // gesture as Insertable
-    let gesture = RawGesture::from(gesture, id_gesture);
-
-    (gesture, descriptons, meanings, pictures)
-}
-
-fn debunk_new_description(
-    mut description: NewDescription,
-    id_gesture: Uuid,
-) -> (RawDescription, Vec<RawMeaning>) {
-    let id_description = Uuid::new_v4();
-
-    // meanings as Insertable
-    let meanings = description
-        .meanings
-        .drain(..)
-        .map(|m| {
-            let id_meaning = Uuid::new_v4();
-            RawMeaning::from(m, None, Some(id_description), id_meaning)
-        })
-        .collect();
-
-    // description as Insertable
-    let description = RawDescription::from(description, id_gesture, id_description);
-
-    (description, meanings)
-}
-
 /// Query the bdd
 async fn insert<T: Insertable>(client: &Client, item: T) -> Result<(), DbError> {
     client
@@ -357,6 +321,18 @@ async fn insert<T: Insertable>(client: &Client, item: T) -> Result<(), DbError> 
         .await
         .map_err(DbError::from)
         .map(|_| ())
+}
+
+async fn update<T: Updatable>(client: &Client, item: T) -> Result<(), DbError> {
+    let nb_modif = client
+        .execute(item.update_query().as_ref() as &str, &item.query_params())
+        .await?;
+
+    if nb_modif > 0 {
+        Ok(())
+    } else {
+        Err(DbError::NotFound)
+    }
 }
 
 pub async fn delete(client: &Client, table: &str, id_col: &str, id: &Uuid) -> Result<(), DbError> {
@@ -367,7 +343,7 @@ pub async fn delete(client: &Client, table: &str, id_col: &str, id: &Uuid) -> Re
         Ok(nb) => {
             // check if there is at least one row deleted
             if nb < 1 {
-                Err(DbError("No items were deleted".to_string()))
+                Err(DbError::NotFound)
             } else {
                 Ok(())
             }
@@ -647,104 +623,6 @@ mod tests {
             );
         }
     }
-    #[cfg(test)]
-    mod debunk_new_gesture {
-        use super::*;
-
-        #[test]
-        fn gesture_with_some_on_each_links() {
-            let (gesture, descriptions, meanings, pictures) = debunk_new_gesture(NewGesture {
-                tags: vec!["tag1".to_owned(), "tag2".to_owned()],
-                descriptions: vec![
-                    NewDescription {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valued1".to_owned(),
-                        meanings: vec![
-                            NewMeaning {
-                                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                                value: "valuem1".to_owned(),
-                            },
-                            NewMeaning {
-                                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                                value: "valuem2".to_owned(),
-                            },
-                        ],
-                    },
-                    NewDescription {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valued2".to_owned(),
-                        meanings: vec![],
-                    },
-                ],
-                meanings: vec![
-                    NewMeaning {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valuem3".to_owned(),
-                    },
-                    NewMeaning {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valuem4".to_owned(),
-                    },
-                ],
-                pictures: vec![
-                    NewPicture {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                    },
-                    NewPicture {
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                    },
-                ],
-            });
-
-            let mut g1 = raw_g1();
-            g1.id_gesture = gesture.id_gesture;
-            assert_eq!(g1, gesture);
-
-            let mut d1 = raw_d1();
-            d1.id_gesture = gesture.id_gesture;
-            d1.id_description = descriptions[0].id_description;
-            assert_eq!(d1, descriptions[0]);
-
-            let mut d2 = raw_d2();
-            d2.id_gesture = gesture.id_gesture;
-            d2.id_description = descriptions[1].id_description;
-            assert_eq!(d2, descriptions[1]);
-
-            let mut m1 = raw_m1();
-            m1.id_gesture = None;
-            m1.id_description = meanings[0].id_description;
-            m1.id_meaning = meanings[0].id_meaning;
-            assert_eq!(m1, meanings[0]);
-
-            let mut m2 = raw_m2();
-            m2.id_gesture = None;
-            m2.id_description = meanings[1].id_description;
-            m2.id_meaning = meanings[1].id_meaning;
-            assert_eq!(m2, meanings[1]);
-
-            let mut m3 = raw_m3();
-            m3.id_gesture = meanings[2].id_gesture;
-            m3.id_description = None;
-            m3.id_meaning = meanings[2].id_meaning;
-            assert_eq!(m3, meanings[2]);
-
-            let mut m4 = raw_m4();
-            m4.id_gesture = meanings[3].id_gesture;
-            m4.id_description = None;
-            m4.id_meaning = meanings[3].id_meaning;
-            assert_eq!(m4, meanings[3]);
-
-            let mut p1 = raw_p1();
-            p1.id_gesture = gesture.id_gesture;
-            p1.id_picture = pictures[0].id_picture;
-            assert_eq!(p1, pictures[0]);
-
-            let mut p2 = raw_p2();
-            p2.id_gesture = gesture.id_gesture;
-            p2.id_picture = pictures[1].id_picture;
-            assert_eq!(p2, pictures[1]);
-        }
-    }
     // --------------------
     // making data for test
     // --------------------
@@ -848,6 +726,7 @@ mod tests {
         Picture {
             id: id_p1().to_hyphenated().to_string(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 
@@ -855,6 +734,7 @@ mod tests {
         Picture {
             id: id_p2().to_hyphenated().to_string(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 
@@ -862,6 +742,7 @@ mod tests {
         Picture {
             id: id_p3().to_hyphenated().to_string(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 
@@ -971,6 +852,7 @@ mod tests {
             id_picture: id_p1(),
             id_gesture: id_g1(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 
@@ -979,6 +861,7 @@ mod tests {
             id_picture: id_p2(),
             id_gesture: id_g1(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 
@@ -987,6 +870,7 @@ mod tests {
             id_picture: id_p3(),
             id_gesture: id_g2(),
             langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+            format: "png".to_owned(),
         }
     }
 

@@ -3,7 +3,7 @@ members = [
     "mon_oeil_srv",
     "mon_oeil_db",
     "mon_oeil_core",
-    # "mon_oeil_file",
+    "mon_oeil_storage",
     "mon_oeil_auth",
     "mon_oeil_auth_shared"
 ]

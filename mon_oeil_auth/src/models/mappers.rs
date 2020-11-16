@@ -1,15 +1,9 @@
 use super::*;
 use mon_oeil_db as db;
 
-impl From<DbError> for Error {
-    fn from(err: DbError) -> Error {
+impl From<db::DbError> for Error {
+    fn from(err: db::DbError) -> Error {
         Error::Bug(format!("{:?}", err))
-    }
-}
-
-impl From<db::DbError> for DbError {
-    fn from(err: db::DbError) -> DbError {
-        DbError(format!("{:?}", err))
     }
 }
 

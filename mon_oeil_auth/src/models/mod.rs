@@ -20,6 +20,3 @@ pub enum Error {
     Bug(String),
     Auth,
 }
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct DbError(String);

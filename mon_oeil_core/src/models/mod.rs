@@ -1,4 +1,3 @@
-use mon_oeil_db as db;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 
@@ -32,21 +31,18 @@ pub struct Meaning {
 pub struct Picture {
     pub id: String,
     pub langs: Vec<String>,
+    pub format: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct NewGesture {
     pub tags: Vec<String>,
-    pub descriptions: Vec<NewDescription>,
-    pub meanings: Vec<NewMeaning>,
-    pub pictures: Vec<NewPicture>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct NewDescription {
     pub value: String,
     pub langs: Vec<String>,
-    pub meanings: Vec<NewMeaning>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
@@ -58,13 +54,23 @@ pub struct NewMeaning {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct NewPicture {
     pub langs: Vec<String>,
+    pub format: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+pub struct NewPictureMeta {
+    pub langs: Vec<String>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct DbError(String);
+pub struct NewPictureFileInfo {
+    pub format: String,
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub enum Error {
     Bug(String),
+    NotFound,
     Auth,
+    NotAccepted(String),
 }

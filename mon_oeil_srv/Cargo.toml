@@ -7,26 +7,32 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix = "0.9.0"
+actix = "0.10.0"
 actix-rt = "1.1.1"
-actix-web = "2.0.0"
+actix-web = "3.2.0"
 actix_derive = "0.5.0"
-bytes = "0.5.6"
+actix-multipart = "0.3.0"
+futures = "0.3.8"
+bytes = "^0.5.3"
 dotenv = "0.15.0"
-env_logger = "0.7.1"
+env_logger = "0.8.1"
 failure = "0.1.8"
 log = "0.4.11"
 mon_oeil_core = {path = "../mon_oeil_core"}
 mon_oeil_auth = {path = "../mon_oeil_auth"}
+mon_oeil_storage = {path = "../mon_oeil_storage" }
 mon_oeil_db = {path = "../mon_oeil_db"}
 serde = {version = "1.0.115", features = ["derive"]}
 serde_json = "1.0.57"
-actix-web-httpauth = "0.4.2"
-actix-cors = "0.2.0"
+actix-web-httpauth = "0.5.0"
+actix-cors = "0.5.1"
 lazy_static = "1.4.0"
 
 [dev-dependencies]
 serial_test = "0.5.0"
 postgres = "0.18.1"
 mon_oeil_auth_shared = {path = "../mon_oeil_auth_shared"}
-
+regex = "1.4.2"
+mon_oeil_storage = {path = "../mon_oeil_storage", features = ["mock"] }
+reqwest = "0.10.8"
+tokio = "^0.2.2"

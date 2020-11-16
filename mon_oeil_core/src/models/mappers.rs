@@ -1,5 +1,9 @@
+use log::error;
+
 use super::*;
 use mon_oeil_auth_shared as auth;
+use mon_oeil_db as db;
+use mon_oeil_storage as storage;
 
 impl From<db::Gesture> for Gesture {
     fn from(item: db::Gesture) -> Self {
@@ -46,40 +50,22 @@ impl From<db::Meaning> for Meaning {
 
 impl From<db::Picture> for Picture {
     fn from(item: db::Picture) -> Self {
-        let db::Picture { id, langs } = item;
-        Self { id, langs }
+        let db::Picture { id, langs, format } = item;
+        Self { id, langs, format }
     }
 }
 
 impl Into<db::NewGesture> for NewGesture {
     fn into(self) -> db::NewGesture {
-        let Self {
-            tags,
-            descriptions,
-            meanings,
-            pictures,
-        } = self;
-        db::NewGesture {
-            tags,
-            descriptions: descriptions.into_iter().map(|i| i.into()).collect(),
-            meanings: meanings.into_iter().map(|i| i.into()).collect(),
-            pictures: pictures.into_iter().map(|i| i.into()).collect(),
-        }
+        let Self { tags } = self;
+        db::NewGesture { tags }
     }
 }
 
 impl Into<db::NewDescription> for NewDescription {
     fn into(self) -> db::NewDescription {
-        let Self {
-            value,
-            langs,
-            meanings,
-        } = self;
-        db::NewDescription {
-            value,
-            langs,
-            meanings: meanings.into_iter().map(|i| i.into()).collect(),
-        }
+        let Self { value, langs } = self;
+        db::NewDescription { value, langs }
     }
 }
 
@@ -92,26 +78,47 @@ impl Into<db::NewMeaning> for NewMeaning {
 
 impl Into<db::NewPicture> for NewPicture {
     fn into(self) -> db::NewPicture {
+        let Self { langs, format } = self;
+        db::NewPicture { langs, format }
+    }
+}
+
+impl Into<db::NewPictureMeta> for NewPictureMeta {
+    fn into(self) -> db::NewPictureMeta {
         let Self { langs } = self;
-        db::NewPicture { langs }
+        db::NewPictureMeta { langs }
     }
 }
 
-impl From<db::DbError> for DbError {
-    fn from(err: db::DbError) -> DbError {
-        DbError(format!("{:?}", err))
+impl Into<db::NewPictureFileInfo> for NewPictureFileInfo {
+    fn into(self) -> db::NewPictureFileInfo {
+        let Self { format } = self;
+        db::NewPictureFileInfo { format }
     }
 }
 
-impl From<DbError> for Error {
-    fn from(err: DbError) -> Error {
-        Error::Bug(format!("{:?}", err))
+impl From<db::DbError> for Error {
+    fn from(err: db::DbError) -> Error {
+        match err {
+            db::DbError::NotFound => Error::NotFound,
+            db::DbError::ForeignKeyViolation(err) => {
+                error!("{:?}", err);
+                Error::NotFound
+            }
+            db::DbError::Other(err) => Error::Bug(format!("{:?}", err)),
+        }
     }
 }
 
 impl From<auth::JwtValidationError> for Error {
     fn from(_err: auth::JwtValidationError) -> Error {
         Error::Auth
+    }
+}
+
+impl From<storage::StorageError> for Error {
+    fn from(err: storage::StorageError) -> Error {
+        Error::Bug(format!("{:?}", err))
     }
 }
 
@@ -166,10 +173,12 @@ mod tests {
             db::Picture {
                 id: "id_p1".to_string(),
                 langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+                format: "png".to_owned(),
             },
             db::Picture {
                 id: "id_p2".to_string(),
                 langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+                format: "png".to_owned(),
             },
         ];
 
@@ -225,10 +234,12 @@ mod tests {
                     Picture {
                         id: "id_p1".to_string(),
                         langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+                        format: "png".to_owned(),
                     },
                     Picture {
                         id: "id_p2".to_string(),
                         langs: vec!["lang1".to_owned(), "lang2".to_owned()],
+                        format: "png".to_owned(),
                     },
                 ],
             },

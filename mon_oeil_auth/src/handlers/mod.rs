@@ -1,12 +1,13 @@
 use chrono::prelude::*;
 
-use crate::{db, models::*};
+use crate::models::*;
 use mon_oeil_auth_shared::*;
+use mon_oeil_db as db;
 
 pub async fn login(
     credential: &Credentials,
     hs256_private_key: &str,
-    db: &db::DbPool,
+    db: &db::GestureClientPool,
 ) -> Result<String, Error> {
     let client = db.get().await.map_err(Error::from)?;
 
@@ -22,7 +23,7 @@ pub async fn login(
 
     let expire = Utc::now()
         .checked_add_signed(chrono::Duration::weeks(1000))
-        .ok_or_else(|| Error::Auth)?;
+        .ok_or(Error::Auth)?;
     encode_jwt(
         hs256_private_key,
         JwtPayload {

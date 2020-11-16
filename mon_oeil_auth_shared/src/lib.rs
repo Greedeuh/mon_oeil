@@ -12,10 +12,16 @@ pub enum Level {
     Admin,
 }
 
-pub fn encode_jwt(hs256_private_key: &str, payload: JwtPayload) -> Result<String, ()> {
+#[derive(Debug)]
+pub struct JwtCreationError;
+
+pub fn encode_jwt(
+    hs256_private_key: &str,
+    payload: JwtPayload,
+) -> Result<String, JwtCreationError> {
     let payload = json!(payload);
     let header = json!({});
-    encode(header, &hs256_private_key, &payload, Algorithm::HS256).map_err(|_| ())
+    encode(header, &hs256_private_key, &payload, Algorithm::HS256).map_err(|_| JwtCreationError {})
 }
 
 pub fn decode_jwt(hs256_private_key: &str, jwt: &str) -> Result<JwtPayload, JwtValidationError> {

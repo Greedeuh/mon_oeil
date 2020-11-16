@@ -1,10 +1,13 @@
 #[allow(dead_code)]
 pub mod setup {
-    use env_logger::Env;
+
     use lazy_static::lazy_static;
-    use mon_oeil_db::GestureClientPool;
     use postgres::NoTls;
     use std::env::var;
+    use std::net::TcpListener;
+
+    use mon_oeil_db::GestureClientPool;
+    use mon_oeil_storage::*;
 
     pub struct ConfTest {
         pub db_pool: GestureClientPool,
@@ -14,20 +17,47 @@ pub mod setup {
     lazy_static! {
         pub static ref CONF: ConfTest = {
             dotenv::dotenv().ok();
-            env_logger::from_env(Env::default().default_filter_or("info")).init();
-            let hs256_private_key = std::env::var("HS256_PRIVATE_KEY").unwrap();
 
             let db_pool = mon_oeil_db::connect_db();
             ConfTest {
                 db_pool,
-                hs256_private_key,
+                hs256_private_key: "private_key".to_owned(),
             }
         };
     }
 
+    pub fn spawn_app() -> String {
+        spawn_app_with_storage(Storage::default)
+    }
+
+    pub fn spawn_app_with_storage(build_storage: fn() -> Storage) -> String {
+        let _ = env_logger::builder().is_test(true).try_init();
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
+        // We retrieve the port assigned to us by the OS
+        let port = listener.local_addr().unwrap().port();
+
+        let server = mon_oeil_srv::run_with_storage(listener, build_storage)
+            .expect("Failed to spawn our app.");
+
+        let _ = tokio::spawn(server);
+
+        format!("http://127.0.0.1:{}", port)
+    }
+
+    pub const ADMIN_TOKEN: &str = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8";
+
     pub fn insert_gesture_without_links() {
         let mut client = connect();
         client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
+    }
+
+    pub fn insert_gesture_with_meaning() {
+        let mut client = connect();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+            id_meaning, id_description, id_gesture, val, langs)
+            VALUES ('59c25147-021e-4584-9c35-97cbf060cc89', null, 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Un petit meaning', '{"fr", "us"}');"#, &[]).unwrap();
     }
 
     pub fn insert_gesture_with_description() {
@@ -36,6 +66,25 @@ pub mod setup {
         client.execute(r#"INSERT INTO descriptions(
                 id_description, id_gesture, val, langs)
                 VALUES ('2ae70884-97bd-401d-8f43-d1778d4502d2', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Une petite description', '{"fr", "us"}');"#, &[]).unwrap();
+    }
+
+    pub fn insert_gesture_with_picture() {
+        let mut client = connect();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO pictures(
+            id_picture, id_gesture, langs, format)
+            VALUES ('283e7b04-7c13-4154-aafe-8e55b6960fe3', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}', 'png');"#, &[]).unwrap();
+    }
+
+    pub fn insert_gesture_with_description_with_meaning() {
+        let mut client = connect();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO descriptions(
+                id_description, id_gesture, val, langs)
+                VALUES ('2ae70884-97bd-401d-8f43-d1778d4502d2', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Une petite description', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+                    id_meaning, id_description, id_gesture, val, langs)
+                    VALUES ('e2c6eee0-49a7-49c4-9a0f-a9c6e6f668d8', '2ae70884-97bd-401d-8f43-d1778d4502d2', null, 'Un petit meaning', '{"fr", "us"}');"#, &[]).unwrap();
     }
 
     pub fn insert_user() {
@@ -80,14 +129,14 @@ pub mod setup {
                 VALUES ('45dca590-6bc4-4e4b-ad0c-0fe57a3a9643', '2ae70884-97bd-401d-8f43-d1778d4502d2', null, 'Un petit meaning', '{"fr", "us"}');"#, &[]).unwrap();
 
         client.execute(r#"INSERT INTO pictures(
-                id_picture, id_gesture, langs)
-                VALUES ('283e7b04-7c13-4154-aafe-8e55b6960fe3', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}');"#, &[]).unwrap();
+                id_picture, id_gesture, langs, format)
+                VALUES ('283e7b04-7c13-4154-aafe-8e55b6960fe3', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}', 'png');"#, &[]).unwrap();
         client.execute(r#"INSERT INTO pictures(
-                id_picture, id_gesture, langs)
-                VALUES ('03b9bfc6-fa22-4ffb-9464-93c1be842ace', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}');"#, &[]).unwrap();
+                id_picture, id_gesture, langs, format)
+                VALUES ('03b9bfc6-fa22-4ffb-9464-93c1be842ace', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}', 'png');"#, &[]).unwrap();
         client.execute(r#"INSERT INTO pictures(
-                id_picture, id_gesture, langs)
-                VALUES ('6e1ee88d-fd97-488c-9aa8-6b66a3f3e714', '16991982-1752-4aa0-bb22-db3fbceb3780', '{"fr", "us"}');"#, &[]).unwrap();
+                id_picture, id_gesture, langs, format)
+                VALUES ('6e1ee88d-fd97-488c-9aa8-6b66a3f3e714', '16991982-1752-4aa0-bb22-db3fbceb3780', '{"fr", "us"}', 'png');"#, &[]).unwrap();
     }
 
     pub fn reset_db() {
@@ -121,5 +170,14 @@ pub mod setup {
             var("PG_USER").unwrap(),
             var("PG_PWD").unwrap(),
         )
+    }
+}
+
+#[allow(dead_code)]
+pub mod check {
+
+    pub fn select_picture() -> postgres::Row {
+        let mut client = super::setup::connect();
+        client.query_one("SELECT * FROM pictures", &[]).unwrap()
     }
 }

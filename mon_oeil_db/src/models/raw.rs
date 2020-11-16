@@ -24,6 +24,7 @@ pub const VALUE_M_COL: &str = "val";
 pub const LANG_M_COL: &str = "langs";
 pub const ID_P_COL: &str = "id_picture";
 pub const LANG_P_COL: &str = "langs";
+pub const FORMAT_P_COL: &str = "format";
 pub const USERNAME_COL: &str = "username";
 pub const _PASSWORD_COL: &str = "password";
 
@@ -33,9 +34,21 @@ pub trait Insertable {
     fn query_params(&self) -> Vec<&(dyn ToSql + Sync)>;
 }
 
+pub trait Updatable {
+    /// Parametrized insert query
+    fn update_query(&self) -> String;
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)>;
+}
+
 #[derive(PartialEq, Eq, Debug, PostgresMapper)]
 #[pg_mapper(table = "gestures")]
 pub struct RawGesture {
+    pub id_gesture: Uuid,
+    pub tags: Vec<String>,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct InnerGesture {
     pub id_gesture: Uuid,
     pub tags: Vec<String>,
 }
@@ -50,6 +63,19 @@ impl Insertable for RawGesture {
 
     fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
         vec![&self.id_gesture, &self.tags]
+    }
+}
+
+impl Updatable for InnerGesture {
+    fn update_query(&self) -> String {
+        format!(
+            "UPDATE {} SET {}=$1 WHERE {}=$2",
+            G_TABLE, TAGS_COL, ID_G_COL
+        )
+    }
+
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
+        vec![&self.tags, &self.id_gesture]
     }
 }
 
@@ -83,6 +109,26 @@ impl Insertable for RawDescription {
             &self.val,
             &self.langs,
         ]
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct InnerDescription {
+    pub id_description: Uuid,
+    pub val: String,
+    pub langs: Vec<String>,
+}
+
+impl Updatable for InnerDescription {
+    fn update_query(&self) -> String {
+        format!(
+            "UPDATE {} SET {}=$1, {}=$2 WHERE {}=$3",
+            D_TABLE, VALUE_D_COL, LANG_D_COL, ID_D_COL
+        )
+    }
+
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
+        vec![&self.val, &self.langs, &self.id_description]
     }
 }
 
@@ -130,6 +176,26 @@ impl Insertable for RawMeaning {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub struct InnerMeaning {
+    pub id_meaning: Uuid,
+    pub val: String,
+    pub langs: Vec<String>,
+}
+
+impl Updatable for InnerMeaning {
+    fn update_query(&self) -> String {
+        format!(
+            "UPDATE {} SET {}=$1, {}=$2 WHERE {}=$3",
+            M_TABLE, VALUE_M_COL, LANG_M_COL, ID_M_COL
+        )
+    }
+
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
+        vec![&self.val, &self.langs, &self.id_meaning]
+    }
+}
+
 impl GestureReliant for RawMeaning {
     fn id_gesture(&self) -> Option<&Uuid> {
         match &self.id_gesture {
@@ -145,18 +211,62 @@ pub struct RawPicture {
     pub id_picture: Uuid,
     pub id_gesture: Uuid,
     pub langs: Vec<String>,
+    pub format: String,
 }
 
 impl Insertable for RawPicture {
     fn insert_query(&self) -> String {
         format!(
-            "INSERT INTO {} ({}, {}, {}) VALUES ($1, $2, $3)",
-            P_TABLE, ID_P_COL, ID_G_COL, LANG_P_COL
+            "INSERT INTO {} ({}, {}, {}, {}) VALUES ($1, $2, $3, $4)",
+            P_TABLE, ID_P_COL, ID_G_COL, LANG_P_COL, FORMAT_P_COL
         )
     }
 
     fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
-        vec![&self.id_picture, &self.id_gesture, &self.langs]
+        vec![
+            &self.id_picture,
+            &self.id_gesture,
+            &self.langs,
+            &self.format,
+        ]
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct InnerPictureMeta {
+    pub id_picture: Uuid,
+    pub langs: Vec<String>,
+}
+
+impl Updatable for InnerPictureMeta {
+    fn update_query(&self) -> String {
+        format!(
+            "UPDATE {} SET {}=$1 WHERE {}=$2",
+            P_TABLE, LANG_P_COL, ID_P_COL
+        )
+    }
+
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
+        vec![&self.langs, &self.id_picture]
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct PictureFileInfo {
+    pub id_picture: Uuid,
+    pub format: String,
+}
+
+impl Updatable for PictureFileInfo {
+    fn update_query(&self) -> String {
+        format!(
+            "UPDATE {} SET {}=$1 WHERE {}=$2",
+            P_TABLE, FORMAT_P_COL, ID_P_COL
+        )
+    }
+
+    fn query_params(&self) -> Vec<&(dyn ToSql + Sync)> {
+        vec![&self.format, &self.id_picture]
     }
 }
 
@@ -189,9 +299,6 @@ mod tests {
                 RawGesture::from(
                     NewGesture {
                         tags: vec!["ah".to_owned(), "ha".to_owned()],
-                        descriptions: vec![],
-                        meanings: vec![],
-                        pictures: vec![],
                     },
                     id_gesture,
                 ),
@@ -208,7 +315,6 @@ mod tests {
                     NewDescription {
                         value: "value".to_owned(),
                         langs: vec!["fr".to_owned(), "us".to_owned()],
-                        meanings: vec![],
                     },
                     id_gesture,
                     id_description
@@ -261,60 +367,12 @@ mod tests {
                 RawPicture::from(
                     NewPicture {
                         langs: vec!["fr".to_owned(), "us".to_owned()],
+                        format: "png".to_owned()
                     },
                     id_gesture,
                     id_picture
                 ),
             )
-        }
-    }
-
-    #[cfg(test)]
-    mod insert_query {
-        use super::*;
-
-        #[test]
-        fn gesture() {
-            assert_eq!(
-                "INSERT INTO gestures (id_gesture, tags) VALUES ($1, $2)".to_owned(),
-                raw_g1(Uuid::new_v4()).insert_query()
-            );
-        }
-
-        #[test]
-        fn decription() {
-            assert_eq!(
-                "INSERT INTO descriptions (id_description, id_gesture, val, langs) VALUES ($1, $2, $3, $4)"
-                    .to_owned(),
-                raw_d1(Uuid::new_v4(),Uuid::new_v4()).insert_query()
-            );
-        }
-
-        #[test]
-        fn description_s_meaning() {
-            assert_eq!(
-                "INSERT INTO meanings (id_meaning, id_description, val, langs) VALUES ($1, $2, $3, $4)"
-                    .to_owned(),
-                raw_m1(Some(Uuid::new_v4()), None, Uuid::new_v4()).insert_query()
-            );
-        }
-
-        #[test]
-        fn gesture_s_meaning() {
-            assert_eq!(
-                "INSERT INTO meanings (id_meaning, id_gesture, val, langs) VALUES ($1, $2, $3, $4)"
-                    .to_owned(),
-                raw_m1(None, Some(Uuid::new_v4()), Uuid::new_v4()).insert_query()
-            );
-        }
-
-        #[test]
-        fn picture() {
-            assert_eq!(
-                "INSERT INTO pictures (id_picture, id_gesture, langs) VALUES ($1, $2, $3)"
-                    .to_owned(),
-                raw_p1(Uuid::new_v4(), Uuid::new_v4()).insert_query()
-            );
         }
     }
 
@@ -353,6 +411,7 @@ mod tests {
             id_gesture,
             id_picture,
             langs: vec!["fr".to_owned(), "us".to_owned()],
+            format: "png".to_owned(),
         }
     }
 }
