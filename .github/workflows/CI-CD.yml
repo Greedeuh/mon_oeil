@@ -56,7 +56,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.45.0
+          toolchain: nightly
           override: true
 
       - name: Run cargo-tarpaulin
