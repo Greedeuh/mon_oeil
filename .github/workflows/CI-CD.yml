@@ -39,6 +39,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
           POSTGRES_DB: db
+
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -66,6 +67,7 @@ jobs:
           PG_DB_NAME_TEST: db
           PG_USER_TEST: postgres
           PG_PWD_TEST: postgres
+          GOOGLE_APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_AUTH_STORAGE}}
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
