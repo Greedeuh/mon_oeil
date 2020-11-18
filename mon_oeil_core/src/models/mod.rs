@@ -31,7 +31,7 @@ pub struct Meaning {
 pub struct Picture {
     pub id: String,
     pub langs: Vec<String>,
-    pub format: String,
+    pub url: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]

@@ -85,7 +85,7 @@ const notif_ko = { msg: "Oups ça n'a pas fonctionné :( Reviens plus tard", suc
 export default new Vuex.Store({
   state: {
     gestures: mock_gestures,
-    editor_mode: false,
+    editor_mode: true,
     selected_gesture_id: null,
     loading: false,
     notif: null
@@ -193,22 +193,23 @@ export default new Vuex.Store({
         context.commit("stop_loading");
       });
     },
-    update_picture(context, { id, content }) {
-      context.commit("start_loading");
-      setTimeout(() => {
+    update_picture_meta(context, { id, new_picture_meta }) {
+      service.put_picture_meta(id, new_picture_meta).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-        content;
-      }, 1000);
+      });
     },
-    upload_picture(context, id) {
-      context.commit("start_loading");
-      setTimeout(() => {
+    update_picture_file(context, { id, new_picture_file }) {
+      service.put_picture_file(id, new_picture_file).then(() => {
+        context.dispatch('load_all_gestures');
+        context.commit('notif', notif_ok);
+      }).catch(() => {
+        context.commit('notif', notif_ko);
         context.commit("stop_loading");
-
-        id;
-      }, 1000);
+      });
     },
     add_description_meaning(context, {id_description, new_meaning}) {
       context.commit("start_loading"); 

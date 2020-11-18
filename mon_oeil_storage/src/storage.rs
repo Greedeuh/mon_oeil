@@ -31,7 +31,7 @@ impl Storage {
         Object::create(
             &self.bucket_name,
             content,
-            id,
+            &format!("{}.{}", id, img_type),
             &format!("image/{}", img_type),
         )
         .await?;

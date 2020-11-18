@@ -6,6 +6,7 @@ use regex::Regex;
 mod utils;
 
 use mon_oeil_core::*;
+use mon_oeil_storage::*;
 use utils::setup;
 
 #[actix_rt::test]
@@ -190,7 +191,14 @@ async fn get_gestures_with_full_links() {
     setup::reset_db();
     setup::insert_2_gestures_with_full_links();
 
-    let address = setup::spawn_app();
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
 
     let client = reqwest::Client::new();
 
@@ -249,12 +257,14 @@ async fn get_gestures_with_full_links() {
                     Picture {
                         id: "283e7b04-7c13-4154-aafe-8e55b6960fe3".to_owned(),
                         langs: vec!["fr".to_owned(), "us".to_owned()],
-                        format: "png".to_owned(),
+                        url: "http://monoielfakeapp.com/283e7b04-7c13-4154-aafe-8e55b6960fe3.png"
+                            .to_owned(),
                     },
                     Picture {
                         id: "03b9bfc6-fa22-4ffb-9464-93c1be842ace".to_owned(),
                         langs: vec!["fr".to_owned(), "us".to_owned()],
-                        format: "png".to_owned(),
+                        url: "http://monoielfakeapp.com/03b9bfc6-fa22-4ffb-9464-93c1be842ace.png"
+                            .to_owned(),
                     },
                 ],
             },
@@ -275,7 +285,8 @@ async fn get_gestures_with_full_links() {
                 pictures: vec![Picture {
                     id: "6e1ee88d-fd97-488c-9aa8-6b66a3f3e714".to_owned(),
                     langs: vec!["fr".to_owned(), "us".to_owned()],
-                    format: "png".to_owned(),
+                    url: "http://monoielfakeapp.com/6e1ee88d-fd97-488c-9aa8-6b66a3f3e714.png"
+                        .to_owned(),
                 }],
             },
         ]

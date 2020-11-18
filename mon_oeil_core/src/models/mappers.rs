@@ -5,25 +5,6 @@ use mon_oeil_auth_shared as auth;
 use mon_oeil_db as db;
 use mon_oeil_storage as storage;
 
-impl From<db::Gesture> for Gesture {
-    fn from(item: db::Gesture) -> Self {
-        let db::Gesture {
-            id,
-            tags,
-            descriptions,
-            meanings,
-            pictures,
-        } = item;
-        Self {
-            id,
-            tags,
-            descriptions: descriptions.into_iter().map(From::from).collect(),
-            meanings: meanings.into_iter().map(From::from).collect(),
-            pictures: pictures.into_iter().map(From::from).collect(),
-        }
-    }
-}
-
 impl From<db::Description> for Description {
     fn from(item: db::Description) -> Self {
         let db::Description {
@@ -48,10 +29,14 @@ impl From<db::Meaning> for Meaning {
     }
 }
 
-impl From<db::Picture> for Picture {
-    fn from(item: db::Picture) -> Self {
-        let db::Picture { id, langs, format } = item;
-        Self { id, langs, format }
+impl Picture {
+    pub fn from(picture_db: db::Picture, storage_url: String) -> Self {
+        let db::Picture { id, langs, .. } = picture_db;
+        Self {
+            id,
+            langs,
+            url: storage_url,
+        }
     }
 }
 
@@ -119,131 +104,5 @@ impl From<auth::JwtValidationError> for Error {
 impl From<storage::StorageError> for Error {
     fn from(err: storage::StorageError) -> Error {
         Error::Bug(format!("{:?}", err))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn map_gesture() {
-        let meanings = vec![
-            db::Meaning {
-                id: "id_m1".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valuem1".to_owned(),
-            },
-            db::Meaning {
-                id: "id_m2".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valuem2".to_owned(),
-            },
-        ];
-
-        let descriptions = vec![
-            db::Description {
-                id: "id_d1".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valued1".to_owned(),
-                meanings: vec![],
-            },
-            db::Description {
-                id: "id_d2".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valued2".to_owned(),
-                meanings,
-            },
-        ];
-
-        let meanings = vec![
-            db::Meaning {
-                id: "id_m1".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valuem1".to_owned(),
-            },
-            db::Meaning {
-                id: "id_m2".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                value: "valuem2".to_owned(),
-            },
-        ];
-
-        let pictures = vec![
-            db::Picture {
-                id: "id_p1".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                format: "png".to_owned(),
-            },
-            db::Picture {
-                id: "id_p2".to_string(),
-                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                format: "png".to_owned(),
-            },
-        ];
-
-        let gesture = db::Gesture {
-            id: "id_g1".to_string(),
-            tags: vec!["tag1".to_owned(), "tag2".to_owned()],
-            descriptions,
-            meanings,
-            pictures,
-        };
-        assert_eq!(
-            Gesture {
-                id: "id_g1".to_string(),
-                tags: vec!["tag1".to_owned(), "tag2".to_owned()],
-                descriptions: vec![
-                    Description {
-                        id: "id_d1".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valued1".to_owned(),
-                        meanings: vec![],
-                    },
-                    Description {
-                        id: "id_d2".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valued2".to_owned(),
-                        meanings: vec![
-                            Meaning {
-                                id: "id_m1".to_string(),
-                                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                                value: "valuem1".to_owned(),
-                            },
-                            Meaning {
-                                id: "id_m2".to_string(),
-                                langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                                value: "valuem2".to_owned(),
-                            }
-                        ],
-                    },
-                ],
-                meanings: vec![
-                    Meaning {
-                        id: "id_m1".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valuem1".to_owned(),
-                    },
-                    Meaning {
-                        id: "id_m2".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        value: "valuem2".to_owned(),
-                    },
-                ],
-                pictures: vec![
-                    Picture {
-                        id: "id_p1".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        format: "png".to_owned(),
-                    },
-                    Picture {
-                        id: "id_p2".to_string(),
-                        langs: vec!["lang1".to_owned(), "lang2".to_owned()],
-                        format: "png".to_owned(),
-                    },
-                ],
-            },
-            Gesture::from(gesture)
-        )
     }
 }

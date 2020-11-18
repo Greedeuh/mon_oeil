@@ -7,7 +7,7 @@
         :key="lang"
         :lang="lang"
       />
-      <img id="picture-img" src="https://picsum.photos/300" />
+      <img id="picture-img" :src="picture.url" />
     </div>
   </div>
 </template>

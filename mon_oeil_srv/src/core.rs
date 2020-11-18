@@ -68,8 +68,9 @@ impl From<mon_oeil_core::Error> for ApiError<mon_oeil_core::Error> {
 async fn get_gestures(
     _req: HttpRequest,
     db: web::Data<db::GestureClientPool>,
+    storage: web::Data<mon_oeil_storage::Storage>,
 ) -> Result<impl Responder, ApiError<mon_oeil_core::Error>> {
-    handlers::get_gestures(&db)
+    handlers::get_gestures(&db, &storage)
         .await
         .map(Json)
         .map_err(ApiError::from)
@@ -331,7 +332,7 @@ async fn extract_file_and_format(mut files: Multipart) -> Result<(Vec<u8>, Strin
         }
         let content = content.freeze().to_vec();
 
-        let content_type = dbg!(field.content_type());
+        let content_type = field.content_type();
         let format = content_type.subtype().to_string();
 
         Ok((content, format))

@@ -37,6 +37,17 @@ function put_meaning(id, new_meaning) {
   return client.put('meanings/' + id,  new_meaning).then(() => undefined)
 }
 
+function put_picture_meta(id, new_picture_meta) {
+  return client.put('pictures/' + id + '/meta',  new_picture_meta).then(() => undefined)
+}
+
+function put_picture_file(id, new_picture_file) {
+  let formData = new FormData();
+  formData.append('picture', new_picture_file);
+
+  return client.put('pictures/' + id + '/file',  formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(() => undefined)
+}
+
 function post_description_meaning(id_description, new_meaning) {
   return client.post('descriptions/' + id_description + '/meanings',  new_meaning).then(() => undefined)
 }
@@ -58,7 +69,9 @@ export const service = {
     delete_picture,
     put_description,
     put_meaning,
+    put_picture_meta,
+    put_picture_file,
     post_description_meaning,
     post_gesture_meaning,
-    post_description
+    post_description    
 }

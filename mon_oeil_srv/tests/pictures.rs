@@ -401,7 +401,9 @@ async fn get_gestures_after_post_picture_should_return_gesture_with_posted_pictu
     let address = setup::spawn_app_with_storage(|| {
         let mut storage = Storage::default();
         storage.expect_upload().returning(|_, _, _| Ok(()));
-
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
         storage
     });
 
@@ -446,9 +448,9 @@ async fn get_gestures_after_post_picture_should_return_gesture_with_posted_pictu
             descriptions: vec![],
             meanings: vec![],
             pictures: vec![Picture {
-                id: uuid,
+                id: uuid.clone(),
                 langs: vec!["fr".to_owned(), "us".to_owned()],
-                format: "png".to_owned(),
+                url: format!("http://monoielfakeapp.com/{}.png", uuid),
             }]
         }]
     )
@@ -657,7 +659,14 @@ async fn get_gesture_after_put_picture_meta_should_return_gesture_with_updated_p
     setup::reset_db();
     setup::insert_gesture_with_picture();
 
-    let address = setup::spawn_app();
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
 
     let new_picture_meta = NewPictureMeta {
         langs: vec!["kr".to_owned()],
@@ -694,7 +703,8 @@ async fn get_gesture_after_put_picture_meta_should_return_gesture_with_updated_p
             pictures: vec![Picture {
                 id: "283e7b04-7c13-4154-aafe-8e55b6960fe3".to_owned(),
                 langs: vec!["kr".to_owned()],
-                format: "png".to_owned(),
+                url: "http://monoielfakeapp.com/283e7b04-7c13-4154-aafe-8e55b6960fe3.png"
+                    .to_owned(),
             }]
         }],
         gestures
