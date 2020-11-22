@@ -1,7 +1,7 @@
 FROM node as vue-env
 WORKDIR /app
 ADD . /app
-RUN cd mon_oeil_front && NODE_ENV=development yarn build
+RUN cd mon_oeil_front && yarn && yarn build
 
 FROM rust:1.45.0 as actix-env
 WORKDIR /app
