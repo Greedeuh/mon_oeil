@@ -1,9 +1,8 @@
 FROM node as vue-env
 WORKDIR /app
 ADD . /app
+RUN yarn global add @vue/cli-service
 RUN cd mon_oeil_front && yarn build
-
-
 
 FROM rust:1.45.0 as actix-env
 WORKDIR /app
