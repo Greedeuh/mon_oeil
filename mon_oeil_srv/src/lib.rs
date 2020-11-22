@@ -1,6 +1,8 @@
 use actix_cors::Cors;
-use actix_web::{dev::Server, middleware::Logger, App, HttpServer};
+use actix_files::NamedFile;
+use actix_web::{dev::Server, middleware::Logger, web, App, HttpRequest, HttpServer, Result};
 use std::net::TcpListener;
+use std::path::PathBuf;
 
 pub mod auth;
 pub mod core;
@@ -36,11 +38,26 @@ pub fn run_with_storage(
                 auth::app_config(&mut config, &hs256_private_key);
                 core::app_config(&mut config, &hs256_private_key);
             })
+            .route("/", web::get().to(vue))
+            .route("/{filename:.*}", web::get().to(index))
     })
     .listen(listener)?
     .run();
 
     Ok(server)
+}
+
+async fn index(req: HttpRequest) -> Result<NamedFile> {
+    println!("AAAAaaaaAAAAaaAAAAaaaa");
+    let path: PathBuf = req.match_info().query("filename").parse().unwrap();
+    Ok(NamedFile::open(&format!(
+        "./mon_oeil_front/dist/{}",
+        path.to_string_lossy()
+    ))?)
+}
+
+async fn vue() -> Result<NamedFile> {
+    Ok(NamedFile::open("./mon_oeil_front/dist/index.html")?)
 }
 
 pub fn cors() -> Cors {
