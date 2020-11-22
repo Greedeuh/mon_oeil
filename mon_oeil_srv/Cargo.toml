@@ -36,3 +36,4 @@ regex = "1.4.2"
 mon_oeil_storage = {path = "../mon_oeil_storage", features = ["mock"] }
 reqwest = "0.10.8"
 tokio = "^0.2.2"
+uuid = {version = "0.8", features = ["v4"]}

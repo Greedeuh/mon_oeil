@@ -67,6 +67,22 @@ pub struct NewPictureFileInfo {
     pub format: String,
 }
 
+fn max_default() -> u16 {
+    15
+}
+fn page_default() -> u16 {
+    1
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+pub struct SearchParam {
+    #[serde(default = "max_default")]
+    pub max: u16,
+    #[serde(default = "page_default")]
+    pub page: u16,
+    pub search: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub enum Error {
     Bug(String),

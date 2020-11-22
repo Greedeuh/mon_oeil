@@ -6,14 +6,23 @@ use mon_oeil_storage::*;
 pub async fn get_gestures(
     db: &db::GestureClientPool,
     storage: &Storage,
-) -> Result<Vec<Gesture>, Error> {
+    search_param: SearchParam,
+) -> Result<(Vec<Gesture>, u16), Error> {
     let gestures = db.get().await.map_err(Error::from)?;
-    let gestures = gestures.gestures().await?;
+    let (gestures, total) = gestures
+        .all_gestures(
+            db::PaginationRequest {
+                max: search_param.max,
+                page: search_param.page,
+            },
+            search_param.search,
+        )
+        .await?;
     let gestures = gestures
         .into_iter()
         .map(|gesture_db| merge_db_and_storage(gesture_db, &storage))
         .collect();
-    Ok(gestures)
+    Ok((gestures, total))
 }
 
 pub fn merge_db_and_storage(gesture_db: db::Gesture, storage: &Storage) -> Gesture {

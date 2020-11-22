@@ -140,6 +140,48 @@ pub mod setup {
                 VALUES ('6e1ee88d-fd97-488c-9aa8-6b66a3f3e714', '16991982-1752-4aa0-bb22-db3fbceb3780', '{"fr", "us"}', 'png');"#, &[]).unwrap();
     }
 
+    pub fn insert_2_gestures_some_content() {
+        let mut client = connect();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "bras"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('16991982-1752-4aa0-bb22-db3fbceb3780', '{"tag1", "jambe"}')"#, &[]).unwrap();
+
+        client.execute(r#"INSERT INTO descriptions(
+                id_description, id_gesture, val, langs)
+                VALUES ('2ae70884-97bd-401d-8f43-d1778d4502d2', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Une petite description', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO descriptions(
+                id_description, id_gesture, val, langs)
+                VALUES ('1c53f9ad-98b4-444c-9ec9-e8f92f1e5d28', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Minute papillon', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO descriptions(
+                id_description, id_gesture, val, langs)
+                VALUES ('cdbcd8fb-3d6d-4f09-86ba-37a6ec1dd293', '16991982-1752-4aa0-bb22-db3fbceb3780', 'Bryan is in the kitchen', '{"fr", "us"}');"#, &[]).unwrap();
+
+        client.execute(r#"INSERT INTO meanings(
+                id_meaning, id_description, id_gesture, val, langs)
+                VALUES ('59c25147-021e-4584-9c35-97cbf060cc89', null, 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Un petit meaning', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+                id_meaning, id_description, id_gesture, val, langs)
+                VALUES ('02ca8fb9-c56e-4e45-b13e-98a6732f780a', null, 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', 'Jean pierre est dehors', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+                id_meaning, id_description, id_gesture, val, langs)
+                VALUES ('4719b1d7-2810-4f7d-865d-03ee44cf0add', null, '16991982-1752-4aa0-bb22-db3fbceb3780', 'Mieux vaut tard que jamais', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+                id_meaning, id_description, id_gesture, val, langs)
+                VALUES ('e2c6eee0-49a7-49c4-9a0f-a9c6e6f668d8', '2ae70884-97bd-401d-8f43-d1778d4502d2', null, 'J aurais surement du fair plus simple :)', '{"fr", "us"}');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO meanings(
+                id_meaning, id_description, id_gesture, val, langs)
+                VALUES ('45dca590-6bc4-4e4b-ad0c-0fe57a3a9643', '2ae70884-97bd-401d-8f43-d1778d4502d2', null, 'T en pense quoi ?', '{"fr", "us"}');"#, &[]).unwrap();
+
+        client.execute(r#"INSERT INTO pictures(
+                id_picture, id_gesture, langs, format)
+                VALUES ('283e7b04-7c13-4154-aafe-8e55b6960fe3', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}', 'png');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO pictures(
+                id_picture, id_gesture, langs, format)
+                VALUES ('03b9bfc6-fa22-4ffb-9464-93c1be842ace', 'ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"fr", "us"}', 'png');"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO pictures(
+                id_picture, id_gesture, langs, format)
+                VALUES ('6e1ee88d-fd97-488c-9aa8-6b66a3f3e714', '16991982-1752-4aa0-bb22-db3fbceb3780', '{"fr", "us"}', 'png');"#, &[]).unwrap();
+    }
+
     pub fn reset_db() {
         use std::fs;
         let schema = fs::read_to_string("schema.sql").expect("Schema.sql not found!");
@@ -177,8 +219,13 @@ pub mod setup {
 #[allow(dead_code)]
 pub mod check {
 
-    pub fn select_picture() -> postgres::Row {
+    pub fn select_picture(id: &str) -> postgres::Row {
         let mut client = super::setup::connect();
-        client.query_one("SELECT * FROM pictures", &[]).unwrap()
+        client
+            .query_one(
+                "SELECT * FROM pictures WHERE id_picture=$1",
+                &[&uuid::Uuid::parse_str(id).unwrap()],
+            )
+            .unwrap()
     }
 }

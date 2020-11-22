@@ -74,3 +74,9 @@ pub struct NewPictureMeta {
 pub struct NewPictureFileInfo {
     pub format: String,
 }
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct PaginationRequest {
+    pub max: u16,
+    pub page: u16,
+}

@@ -175,6 +175,51 @@ async fn post_picture_without_langs_is_ok() {
 
 #[actix_rt::test]
 #[serial]
+async fn post_picture_with_empty_langs_is_ok() {
+    setup::reset_db();
+    setup::insert_gesture_without_links();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage.expect_upload().returning(|_, _, _| Ok(()));
+
+        storage
+    });
+
+    let file = std::fs::read("asset/dummy.png").unwrap();
+
+    let client = reqwest::Client::new();
+    let form = multipart::Form::new().part(
+        "picture",
+        multipart::Part::bytes(file)
+            .file_name("dummy.png")
+            .mime_str("image/png")
+            .unwrap(),
+    );
+    let res = client
+        .post(&format!(
+            "{}/gestures/ce27c124-e47b-490f-b8fe-3f37d5dbbef6/pictures?langs=",
+            address
+        ))
+        .multipart(form)
+        .header("Authorization", setup::ADMIN_TOKEN)
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::CREATED);
+
+    let uuid = res.text().await.unwrap();
+    let uuid = uuid.replace("\"", "");
+
+    let langs: Vec<String> = utils::check::select_picture(&uuid).get("langs");
+    let expected: Vec<String> = Vec::new();
+
+    assert_eq!(langs, expected)
+}
+
+#[actix_rt::test]
+#[serial]
 async fn post_picture_accept_png() {
     setup::reset_db();
     setup::insert_gesture_without_links();
@@ -484,7 +529,7 @@ async fn delete_picture_should_accept_auth() {
 
     let address = setup::spawn_app_with_storage(|| {
         let mut storage = Storage::default();
-        storage.expect_delete().returning(|_| Ok(()));
+        storage.expect_delete().returning(|_, _| Ok(()));
 
         storage
     });
@@ -509,7 +554,7 @@ async fn delete_not_existing_picture_should_fail() {
 
     let address = setup::spawn_app_with_storage(|| {
         let mut storage = Storage::default();
-        storage.expect_delete().returning(|_| Ok(()));
+        storage.expect_delete().returning(|_, _| Ok(()));
 
         storage
     });
@@ -535,7 +580,7 @@ async fn get_gestures_after_delete_picture_should_return_nothing() {
 
     let address = setup::spawn_app_with_storage(|| {
         let mut storage = Storage::default();
-        storage.expect_delete().returning(|_| Ok(()));
+        storage.expect_delete().returning(|_, _| Ok(()));
 
         storage
     });
@@ -846,7 +891,7 @@ async fn put_picture_file_with_other_format_should_change_format() {
 
     assert!(res.status().is_success());
 
-    let row_picture = check::select_picture();
+    let row_picture = check::select_picture("283e7b04-7c13-4154-aafe-8e55b6960fe3");
     let format: String = row_picture.get("format");
     assert_eq!(format, "jpg".to_owned());
 }

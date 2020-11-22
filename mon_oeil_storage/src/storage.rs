@@ -39,8 +39,8 @@ impl Storage {
         Ok(())
     }
 
-    pub async fn delete(&self, id: &str) -> Result<(), StorageError> {
-        Object::delete(&self.bucket_name, id).await?;
+    pub async fn delete(&self, id: &str, img_type: &str) -> Result<(), StorageError> {
+        Object::delete(&self.bucket_name, &format!("{}.{}", id, img_type)).await?;
 
         Ok(())
     }
@@ -69,7 +69,7 @@ mod tests {
         let file = std::fs::read("asset/dummy.png").unwrap();
 
         let res_upload = storage.upload("test", file.clone(), "png").await.is_ok();
-        let res_delete = storage.delete("test").await.is_ok();
+        let res_delete = storage.delete("test", "png").await.is_ok();
 
         // assert at the end to have more chance to stay clean in our test storage
         assert!(res_upload);

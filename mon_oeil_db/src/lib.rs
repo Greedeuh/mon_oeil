@@ -95,15 +95,82 @@ pub struct GestureClient {
 
 impl GestureClient {
     /// Retrieve all gestures from db
-    pub async fn gestures(&self) -> Result<Vec<Gesture>, DbError> {
+    pub async fn all_gestures(
+        &self,
+        pagination: PaginationRequest,
+        search: Option<String>,
+    ) -> Result<(Vec<Gesture>, u16), DbError> {
         let client = &self.client;
 
+        let offset = (pagination.page - 1) * pagination.max;
+
+        let search = search.map(|s| format!("{}:*", s));
+
+        let (gestures, gestures_count_query) = match search.clone() {
+            Some(search) => {
+                let gestures_query = &format!(
+                    "SELECT {g_table}.* FROM {s_table}
+                    LEFT JOIN {g_table} ON {s_table}.{id_g} = {g_table}.{id_g}
+                    WHERE {s_table}.{document} @@ to_tsquery($1)
+                    ORDER BY ts_rank({s_table}.{document}, to_tsquery($1)) DESC
+                    LIMIT {} OFFSET {}",
+                    pagination.max,
+                    offset,
+                    id_g = ID_G_COL,
+                    s_table = SEARCHABLE_VIEW,
+                    g_table = G_TABLE,
+                    document = DOCUMENT
+                );
+
+                let gestures = select::<RawGesture>(client, &gestures_query, &[&search]).await?;
+
+                let gestures_count_query = format!(
+                    "SELECT COUNT(*) FROM {}
+                    WHERE {} @@ to_tsquery($1)",
+                    SEARCHABLE_VIEW, DOCUMENT
+                );
+                (gestures, gestures_count_query)
+            }
+            _ => {
+                let gestures_query = format!(
+                    "SELECT * FROM gestures LIMIT {} OFFSET {}",
+                    pagination.max, offset
+                );
+                let gestures = select::<RawGesture>(client, &gestures_query, &[]).await?;
+
+                let gestures_count_query = "SELECT COUNT(*) FROM gestures".to_owned();
+                (gestures, gestures_count_query)
+            }
+        };
+
+        let ids_gestures = gestures.iter().map(|g| g.id_gesture).collect::<Vec<Uuid>>();
+
         // Select evrything from db
-        let (gestures, descriptions, meanings, pictures) = future::try_join4(
-            select::<RawGesture>(client, "SELECT * FROM gestures", &[]),
-            select::<RawDescription>(client, "SELECT * FROM descriptions", &[]),
-            select::<RawMeaning>(client, "SELECT * FROM meanings", &[]),
-            select::<RawPicture>(client, "SELECT * FROM pictures", &[]),
+        let gestures_count_query = async {
+            match search {
+                Some(search) => client
+                    .query_one(gestures_count_query.as_str(), &[&search])
+                    .await
+                    .map_err(DbError::from),
+                _ => client
+                    .query_one(gestures_count_query.as_str(), &[])
+                    .await
+                    .map_err(DbError::from),
+            }
+        };
+
+        let descriptions_query = format!("SELECT * FROM {} WHERE {} = ANY($1)", D_TABLE, ID_G_COL);
+        let meanings_query = format!(
+            "SELECT * FROM {} WHERE {} = ANY($1) OR {} = ANY($1)",
+            M_TABLE_WITH_G_ID, ID_G_COL, ID_DG_COL
+        );
+        let pictures_query = format!("SELECT * FROM {} WHERE {} = ANY($1)", P_TABLE, ID_G_COL);
+
+        let (descriptions, meanings, pictures, total) = future::try_join4(
+            select::<RawDescription>(client, &descriptions_query, &[&ids_gestures]),
+            select::<RawMeaning>(client, &meanings_query, &[&ids_gestures]),
+            select::<RawPicture>(client, &pictures_query, &[&ids_gestures]),
+            gestures_count_query,
         )
         .await?;
 
@@ -115,14 +182,11 @@ impl GestureClient {
         // group nested description meaning
         let (meanings_d, _) = group_by_id_description(meanings_o);
 
+        let gestures = merge(gestures, descriptions, meanings_g, meanings_d, pictures);
+
+        let total: i64 = total.get(0);
         // merge as nested datas our pre-grouped datas
-        Ok(merge(
-            gestures,
-            descriptions,
-            meanings_g,
-            meanings_d,
-            pictures,
-        ))
+        Ok((gestures, total as u16))
     }
 
     /// Add a gesture in db
@@ -254,6 +318,21 @@ impl GestureClient {
         .await
     }
 
+    pub async fn get_picture_format(&self, id: &str) -> Result<String, DbError> {
+        let uuid =
+            Uuid::parse_str(id).map_err(|e| DbError::Other(format!("Wrong uuid {:?}", e)))?;
+
+        let query = format!(
+            "SELECT {} FROM {} WHERE {}=$1",
+            FORMAT_P_COL, P_TABLE, ID_P_COL
+        );
+        let row = self.client.query_opt(query.as_str(), &[&uuid]).await?;
+        match row {
+            Some(row) => Ok(row.get(FORMAT_P_COL)),
+            _ => Err(DbError::NotFound),
+        }
+    }
+
     /// Delete description and nested data from db
     pub async fn delete_description_cascade(&self, id: &str) -> Result<(), DbError> {
         delete(
@@ -305,7 +384,7 @@ async fn select<T: FromTokioPostgresRow>(
     sql: &str,
     params: &[&(dyn ToSql + Sync)],
 ) -> Result<Vec<T>, DbError> {
-    let rows = client.query(sql, params).await.map_err(DbError::from)?;
+    let rows = client.query(sql, params).await?;
 
     Ok(rows
         .into_iter()
@@ -318,9 +397,8 @@ async fn select<T: FromTokioPostgresRow>(
 async fn insert<T: Insertable>(client: &Client, item: T) -> Result<(), DbError> {
     client
         .execute(item.insert_query().as_ref() as &str, &item.query_params())
-        .await
-        .map_err(DbError::from)
-        .map(|_| ())
+        .await?;
+    Ok(())
 }
 
 async fn update<T: Updatable>(client: &Client, item: T) -> Result<(), DbError> {
@@ -339,16 +417,11 @@ pub async fn delete(client: &Client, table: &str, id_col: &str, id: &Uuid) -> Re
     let sql = format!("DELETE FROM {} WHERE {} = $1", table, id_col);
     let sql: &str = sql.as_ref();
 
-    match client.execute(sql, &[&id]).await.map_err(DbError::from) {
-        Ok(nb) => {
-            // check if there is at least one row deleted
-            if nb < 1 {
-                Err(DbError::NotFound)
-            } else {
-                Ok(())
-            }
-        }
-        Err(e) => Err(e),
+    let nb = client.execute(sql, &[&id]).await?;
+    if nb < 1 {
+        Err(DbError::NotFound)
+    } else {
+        Ok(())
     }
 }
 

@@ -86,7 +86,9 @@ pub async fn delete_picture(
     valid_jwt_admin(hs256_private_key, jwt).map_err(Error::from)?;
     let client = db.get().await.map_err(Error::from)?;
 
-    storage.delete(&id).await?;
+    let format = client.get_picture_format(id).await?;
+
+    storage.delete(&id, &format).await?;
 
     client.delete_picture(&id).await.map_err(Error::from)
 }

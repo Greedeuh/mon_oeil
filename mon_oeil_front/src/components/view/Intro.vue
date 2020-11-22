@@ -1,7 +1,7 @@
 <template>
   <div class="intro">
     <h1>Mon œil !</h1>
-    <img src="logo.jpg" />
+    <img src="logo.png" />
     <p>Les gestes des étudiants français et colombiens</p>
   </div>
 </template>

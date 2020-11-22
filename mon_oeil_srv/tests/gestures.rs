@@ -417,3 +417,172 @@ async fn get_gesture_after_put_should_return_updated_gesture() {
         gestures
     )
 }
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_page_1_max_1_should_return_first() {
+    setup::reset_db();
+    setup::insert_2_gestures_with_full_links();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?max=1&page=1", address))
+        .send()
+        .await
+        .unwrap();
+
+    let gestures: Vec<Gesture> = res.json().await.unwrap();
+    assert_eq!(gestures.len(), 1);
+    assert_eq!(gestures[0].id, "ce27c124-e47b-490f-b8fe-3f37d5dbbef6");
+}
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_page_2_max_1_should_return_second() {
+    setup::reset_db();
+    setup::insert_2_gestures_with_full_links();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?max=1&page=2", address))
+        .send()
+        .await
+        .unwrap();
+
+    let gestures: Vec<Gesture> = res.json().await.unwrap();
+    assert_eq!(gestures.len(), 1);
+    assert_eq!(gestures[0].id, "16991982-1752-4aa0-bb22-db3fbceb3780");
+}
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_page_1_max_1_should_return_total_in_header() {
+    setup::reset_db();
+    setup::insert_2_gestures_with_full_links();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?max=1&page=1", address))
+        .send()
+        .await
+        .unwrap();
+
+    assert!(res
+        .headers()
+        .iter()
+        .any(|header| header.0 == "total-items" && header.1 == "2"));
+}
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_search_match_on_tag() {
+    setup::reset_db();
+    setup::insert_2_gestures_some_content();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?search=bras", address))
+        .send()
+        .await
+        .unwrap();
+
+    let gestures: Vec<Gesture> = res.json().await.unwrap();
+    assert!(gestures.len() == 1);
+    assert_eq!(gestures[0].id, "ce27c124-e47b-490f-b8fe-3f37d5dbbef6");
+}
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_search_match_on_description() {
+    setup::reset_db();
+    setup::insert_2_gestures_some_content();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?search=description", address))
+        .send()
+        .await
+        .unwrap();
+
+    let gestures: Vec<Gesture> = res.json().await.unwrap();
+    assert!(gestures.len() == 1);
+    assert_eq!(gestures[0].id, "ce27c124-e47b-490f-b8fe-3f37d5dbbef6");
+}
+
+#[actix_rt::test]
+#[serial]
+async fn get_gestures_with_search_match_on_meaning() {
+    setup::reset_db();
+    setup::insert_2_gestures_some_content();
+
+    let address = setup::spawn_app_with_storage(|| {
+        let mut storage = Storage::default();
+        storage
+            .expect_get_url()
+            .returning(|id, fmt| format!("http://monoielfakeapp.com/{}.{}", id, fmt));
+
+        storage
+    });
+
+    let client = reqwest::Client::new();
+
+    let res = client
+        .get(&format!("{}/gestures?search=meaning", address))
+        .send()
+        .await
+        .unwrap();
+
+    let gestures: Vec<Gesture> = res.json().await.unwrap();
+    assert!(gestures.len() == 1);
+    assert_eq!(gestures[0].id, "ce27c124-e47b-490f-b8fe-3f37d5dbbef6");
+}

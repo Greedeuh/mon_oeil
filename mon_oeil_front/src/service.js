@@ -1,16 +1,31 @@
 import axios from "axios";
+import jwt from "jsonwebtoken";
 
 const client = axios.create({
     baseURL: 'http://localhost:8000/',
     timeout: 1000,
-    headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIyMDM0MDcxOTgsImxldmVsIjoiQWRtaW4ifQ.RLE2du-ICZ0mlFl02YytZC02Xk0U5qyNRBxhi_-SvY8',
+    headers: {
     'Access-Control-Allow-Origin': '*'},
 
   });
 
 
-function get_all_gestures() {
-   return client.get('gestures').then(res => res.data)
+function get_gestures(page, search_text) {
+  let uri = 'gestures?max=10&page=' + page;
+    if (search_text) {
+      uri += '&search=' + search_text
+    }
+    return client
+      .get(uri)
+      .then(res =>  {
+        let total_pages;
+        
+          total_pages = parseInt(res.headers['total-items'], 10);
+        if (isNaN(total_pages)){
+          total_pages = 1;
+        }
+        return { gestures: res.data, total_pages  }
+      });
 }
 
 function delete_gesture(id) {
@@ -61,17 +76,53 @@ function post_description(id_gesture, new_description) {
   return client.post('gestures/' + id_gesture + '/descriptions',  new_description).then(() => undefined)
 }
 
+function post_gesture(gesture) {
+  return client.post('gestures', gesture).then((res) => res.data )
+}
+
+function post_picture(id_gesture, langs, file) {
+  let formData = new FormData();
+  formData.append('picture', file);
+
+  return client.post('gestures/'+id_gesture +'/pictures?langs='  + langs.join(';'),  formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(() => undefined)
+}
+
+function login(credentials) {
+  return client.post('login',  credentials).then((res) => {
+    sessionStorage.setItem('jwt', res.data);
+    return jwt.decode(res.data);
+  })
+}
+
+client.interceptors.request.use(
+  config => {
+    const token = sessionStorage.getItem('jwt');
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete client.defaults.headers.common.Authorization;
+    }
+    return config;
+  },
+
+  error => Promise.reject(error)
+);
+
 export const service = {
-    get_all_gestures,
-    delete_gesture,
-    delete_description,
-    delete_meaning,
-    delete_picture,
-    put_description,
-    put_meaning,
-    put_picture_meta,
-    put_picture_file,
-    post_description_meaning,
-    post_gesture_meaning,
-    post_description    
+  get_gestures,
+  delete_gesture,
+  delete_description,
+  delete_meaning,
+  delete_picture,
+  put_description,
+  put_meaning,
+  put_picture_meta,
+  put_picture_file,
+  post_description_meaning,
+  post_gesture_meaning,
+  post_description,
+  post_gesture,
+  post_picture,
+  login,
 }

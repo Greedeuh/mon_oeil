@@ -1,7 +1,7 @@
 <template>
   <div id="editor">
+    <h1>Editeur</h1> <button @click="add_gesture">Nouveau geste</button>
     <div id="content" v-if="selected_gesture">
-      <h1>Editeur</h1>
       <button @click="del">Supprimer</button>
       <DescriptionEditor
         v-for="description in selected_gesture.descriptions"
@@ -18,6 +18,7 @@
       <button @click="add_meaning">Ajouter un Meaning</button>
 
       <PictureEditor v-for="picture in selected_gesture.pictures" :key="picture.id" :picture="picture"/>
+      <PictureCreator :id_gesture="selected_gesture.id" />
     </div>
   </div>
 </template>
@@ -26,12 +27,13 @@
 import DescriptionEditor from "./edit/DescriptionEditor.vue";
 import MeaningEditor from "./edit/MeaningEditor";
 import PictureEditor from "./edit/PictureEditor";
+import PictureCreator from "./edit/PictureCreator";
 
 import { mapGetters } from "vuex";
 
 export default {
   name: "Editor",
-  components: { DescriptionEditor, MeaningEditor, PictureEditor },
+  components: { DescriptionEditor, MeaningEditor, PictureEditor,PictureCreator },
   methods: {
     del(){
       this.$store.dispatch("del_gesture", this.selected_gesture.id);
@@ -47,6 +49,11 @@ export default {
         new_description: { value: "", langs: ["fr"] },
       });
     },
+    add_gesture(){
+      this.$store.dispatch("add_gesture", {
+        tags: [],
+      });
+    }
   },
   computed: {
     ...mapGetters(["selected_gesture"]),

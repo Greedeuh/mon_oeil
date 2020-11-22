@@ -2,10 +2,9 @@
   <div id="app">
     <loading :active.sync="loading" :is-full-page="true" />
     <notifications group="app" />
-
-    <button id="editor_mode" @click="toggle_editor_mode">EDITOR MODE</button>
     <Viewer id="viewer" :class="{ editor_mode: editor_mode }" />
     <Editor v-if="editor_mode" id="editor" />
+    <Login v-if="user.logging_in"/>
   </div>
 </template>
 
@@ -18,22 +17,20 @@ import { mapGetters } from 'vuex'
 
 import Viewer from "./components/Viewer.vue";
 import Editor from "./components/Editor.vue";
+import Login from "./components/Login.vue";
+
+const key_pressed = [];
 
 export default {
   name: "App",
   components: {
     Viewer,
     Editor,
-    Loading
+    Loading,
+    Login
   },
   methods: {
-    toggle_editor_mode() {
-      this.$store.commit("toggle_editor_mode");
-    },
-  },
-  created() {
-    this.$store.dispatch('load_all_gestures')
-    this.$store.subscribe((mutation, state) => {
+    on_notif(mutation, state) {
       if (mutation.type === "notif") {
         let type;
         if (state.notif.success) {
@@ -47,11 +44,44 @@ export default {
           type
         });
       }
-    })
+    },
+    on_key_down(event){
+      // LOGIN
+      this.on_key_down_login(event)
+      this.on_key_down_editor_mode(event)
+      
+    },
+    on_key_down_login(event){
+      if (event.key === 'Alt' || event.key === 'l' || event.key === 'L') {
+        key_pressed[event.key] = true
+        if (key_pressed['Alt'] && (key_pressed['l'] || key_pressed['L']) && !this.user.logging_in) {
+          this.$store.commit('logging_in', true);
+        }
+      }
+    },on_key_down_editor_mode(event){
+      if (event.key === 'Alt' || event.key === 'm' || event.key === 'M') {
+        key_pressed[event.key] = true
+        if (key_pressed['Alt'] && (key_pressed['m'] || key_pressed['M'])) {
+          this.$store.commit("toggle_editor_mode");
+        }
+      }
+    },
+    on_key_up(event){
+      if (event.key === 'Alt' || event.key === 'l' || event.key === 'L' || event.key === 'm' || event.key === 'M') {
+        key_pressed[event.key] = false
+      }
+    }
+  },
+  created() {
+    this.$store.dispatch('load_gestures')
 
+    this.$store.subscribe(this.on_notif);
+
+    window.addEventListener('keydown', this.on_key_down);
+    window.addEventListener('keyup', this.on_key_up);
   },
   computed: {
-    ...mapGetters(['editor_mode', 'loading'])
+    ...mapGetters(['editor_mode', 'loading', 'user'])
   },
 };
 </script>

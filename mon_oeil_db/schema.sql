@@ -36,3 +36,8 @@ CREATE TABLE users
     username       text PRIMARY KEY,
     PASSWORD    text
 );
+
+CREATE VIEW meanings_with_gesture_id AS
+    SELECT meanings.*, descriptions.id_gesture as id_description_gesture
+    FROM meanings
+	LEFT JOIN descriptions ON (meanings.id_description = descriptions.id_description);

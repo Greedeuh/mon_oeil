@@ -1,5 +1,5 @@
 use actix_multipart::Multipart;
-use actix_web::{error, web, web::Json, Error, HttpRequest, HttpResponse, Responder};
+use actix_web::{error, web, Error, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use bytes::buf::BufMut;
 use bytes::BytesMut;
@@ -66,13 +66,23 @@ impl From<mon_oeil_core::Error> for ApiError<mon_oeil_core::Error> {
 }
 
 async fn get_gestures(
-    _req: HttpRequest,
     db: web::Data<db::GestureClientPool>,
     storage: web::Data<mon_oeil_storage::Storage>,
+    search_param: web::Query<mon_oeil_core::SearchParam>,
 ) -> Result<impl Responder, ApiError<mon_oeil_core::Error>> {
-    handlers::get_gestures(&db, &storage)
+    let max = search_param.max;
+    handlers::get_gestures(&db, &storage, search_param.into_inner())
         .await
-        .map(Json)
+        .map(|(gestures, total)| {
+            if max >= total {
+                HttpResponse::Ok().json(gestures)
+            } else {
+                HttpResponse::PartialContent()
+                    .header("Access-Control-Expose-Headers", "total-items")
+                    .header("total-items", format!("{}", total))
+                    .json(gestures)
+            }
+        })
         .map_err(ApiError::from)
 }
 
@@ -276,6 +286,7 @@ async fn post_picture(
                     .unwrap_or_else(|| "".to_owned())
                     .split(';')
                     .map(str::to_owned)
+                    .filter(|x| !x.is_empty())
                     .collect(),
                 format,
             };

@@ -11,10 +11,13 @@ pub trait GestureReliant {
 pub const G_TABLE: &str = "gestures";
 pub const D_TABLE: &str = "descriptions";
 pub const M_TABLE: &str = "meanings";
+pub const M_TABLE_WITH_G_ID: &str = "meanings_with_gesture_id";
+pub const SEARCHABLE_VIEW: &str = "searchable";
 pub const P_TABLE: &str = "pictures";
 pub const U_TABLE: &str = "users";
 
 pub const ID_G_COL: &str = "id_gesture";
+pub const ID_DG_COL: &str = "id_description_gesture";
 pub const TAGS_COL: &str = "tags";
 pub const ID_D_COL: &str = "id_description";
 pub const VALUE_D_COL: &str = "val";
@@ -27,6 +30,7 @@ pub const LANG_P_COL: &str = "langs";
 pub const FORMAT_P_COL: &str = "format";
 pub const USERNAME_COL: &str = "username";
 pub const _PASSWORD_COL: &str = "password";
+pub const DOCUMENT: &str = "document";
 
 pub trait Insertable {
     /// Parametrized insert query

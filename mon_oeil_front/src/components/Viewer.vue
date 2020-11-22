@@ -1,7 +1,8 @@
 <template>
-  <div class="viewer">
+  <div class="viewer" ref="el">
     <div class="content">
       <Intro class="intro" />
+      <Search class="search"/>
       <div class="gestures">
         <div v-for="(gesture, index) in gestures" :key="gesture.id">
           <Gesture
@@ -10,15 +11,19 @@
             :gesture="gesture"
           />
           <hr v-if="index != gestures.length - 1" class="dot_hr" />
-        </div>
+        </div> 
       </div>
+      <Pagination />
     </div>
+    <span v-if="gestures.length == 0">Aucun résultat :(</span>
   </div>
 </template>
 
 <script>
 import Intro from "./view/Intro.vue";
 import Gesture from "./view/Gesture.vue";
+import Search from "./Search.vue"
+import Pagination from "./Pagination.vue"
 
 import { mapGetters } from "vuex";
 
@@ -27,6 +32,8 @@ export default {
   components: {
     Intro,
     Gesture,
+    Search,
+    Pagination
   },
   methods: {
     select(gesture) {
@@ -35,6 +42,17 @@ export default {
   },
   computed: {
     ...mapGetters(["gestures"]),
+  },
+  created() {
+    this.$store.subscribe((mutation, state) => {
+      if(mutation.type === 'go_page' && state.search_count > 1) {
+        this.$refs.el.scroll({
+          top: window.innerHeight,
+          left: 0,
+          behavior: 'smooth'
+        }); 
+      }
+    })
   },
 };
 </script>
@@ -50,6 +68,7 @@ export default {
   width: 100%;
   height: 100vh;
   overflow: auto;
+  text-align: center;
 }
 
 .content {
@@ -59,6 +78,7 @@ export default {
   background-image: url(../assets/dot_background.png);
   background-repeat: repeat-y;
   background-position: right;
+  text-align: initial;
 }
 
 hr.dot_hr {
