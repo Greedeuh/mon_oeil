@@ -3,7 +3,7 @@ WORKDIR /app
 ADD . /app
 RUN cd mon_oeil_front && yarn && yarn build
 
-FROM rustlang/rust as actix-env
+FROM rustlang/rust:nightly as actix-env
 WORKDIR /app
 ADD . /app
 RUN cargo build --release
