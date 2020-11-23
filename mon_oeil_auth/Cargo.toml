@@ -24,6 +24,7 @@ chrono = "0.4"
 mon_oeil_db = {path = "../mon_oeil_db"}
 actix-cors = "0.2.0"
 futures = "0.3.7"
+blake2 = "0.9"
 
 [dev-dependencies]
 faux = "0.0.5"

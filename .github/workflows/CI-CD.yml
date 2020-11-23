@@ -69,6 +69,7 @@ jobs:
           PG_PWD: postgres
           GOOGLE_APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_AUTH_STORAGE}}
           HS256_PRIVATE_KEY: private_key
+          SALT_HASH: sel
           GOOGLE_CLOUD_BUCKET: ${{secrets.GCLOUD_STORAGE_TEST}}
 
       - name: Upload to codecov.io

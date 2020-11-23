@@ -1,3 +1,4 @@
+use blake2::{Blake2b, Digest};
 use chrono::prelude::*;
 
 use crate::models::*;
@@ -7,6 +8,7 @@ use mon_oeil_db as db;
 pub async fn login(
     credential: &Credentials,
     hs256_private_key: &str,
+    salt_hash: &str,
     db: &db::GestureClientPool,
 ) -> Result<String, Error> {
     let client = db.get().await.map_err(Error::from)?;
@@ -17,7 +19,14 @@ pub async fn login(
         e => return Err(Error::Bug(format!("{:?}", e))),
     };
 
-    if user.password != credential.password {
+    let hash = Blake2b::new()
+        .chain(&credential.password)
+        .chain(salt_hash)
+        .finalize();
+    println!("{} {}", &credential.password, salt_hash);
+    let hash_password = dbg!(format!("{:x}", hash));
+
+    if user.password != hash_password {
         return Err(Error::Auth);
     }
 

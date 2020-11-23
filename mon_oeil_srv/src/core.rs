@@ -11,11 +11,8 @@ use crate::{ApiError, Conf};
 use mon_oeil_core::*;
 use mon_oeil_db as db;
 
-pub fn app_config(config: &mut web::ServiceConfig, hs256_private_key: &str) {
+pub fn app_config(config: &mut web::ServiceConfig) {
     config
-        .data(Conf {
-            hs256_private_key: hs256_private_key.to_owned(),
-        })
         .route("/gestures", web::get().to(get_gestures))
         .route("/gestures", web::post().to(post_gesture))
         .route("/gestures/{id}", web::put().to(put_gesture))

@@ -92,7 +92,7 @@ pub mod setup {
         let mut client = connect();
         client
             .execute(
-                r#"INSERT INTO users(username, password) VALUES ('user_test', 'password_test')"#,
+                r#"INSERT INTO users(username, password) VALUES ('user_test', '7a586efcec55d36de0d252bef656a4d932ee7399ed1b240211b05b468e8247340bfa2892289e4904776a4c224ee6b22c04921d1578775fe5fe39ebce7c6b2a2e')"#,
                 &[],
             )
             .unwrap();

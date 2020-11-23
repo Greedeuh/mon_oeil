@@ -23,6 +23,7 @@ pub fn run_with_storage(
     build_storage: fn() -> Storage,
 ) -> Result<Server, std::io::Error> {
     let hs256_private_key = std::env::var("HS256_PRIVATE_KEY").unwrap();
+    let salt_hash = std::env::var("SALT_HASH").unwrap();
 
     let db_pool = mon_oeil_db::connect_db();
 
@@ -32,9 +33,13 @@ pub fn run_with_storage(
             .data(build_storage())
             .data(db_pool.clone())
             .data(build_storage())
+            .data(Conf {
+                hs256_private_key: hs256_private_key.to_owned(),
+                salt_hash: salt_hash.to_owned(),
+            })
             .configure(|mut config| {
-                auth::app_config(&mut config, &hs256_private_key);
-                core::app_config(&mut config, &hs256_private_key);
+                auth::app_config(&mut config);
+                core::app_config(&mut config);
             })
             .route("/", web::get().to(vue))
             .route("/{filename:.*}", web::get().to(index))
@@ -56,8 +61,10 @@ async fn index(req: HttpRequest) -> Result<NamedFile> {
 async fn vue() -> Result<NamedFile> {
     Ok(NamedFile::open("./mon_oeil_front/dist/index.html")?)
 }
+
 pub struct Conf {
     pub hs256_private_key: String,
+    pub salt_hash: String,
 }
 
 struct ApiError<T>(T);

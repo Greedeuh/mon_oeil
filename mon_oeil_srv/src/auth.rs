@@ -5,12 +5,8 @@ use crate::{ApiError, Conf};
 use mon_oeil_auth::*;
 use mon_oeil_db as db;
 
-pub fn app_config(config: &mut web::ServiceConfig, hs256_private_key: &str) {
-    config
-        .data(Conf {
-            hs256_private_key: hs256_private_key.to_owned(),
-        })
-        .route("/login", web::post().to(login));
+pub fn app_config(config: &mut web::ServiceConfig) {
+    config.route("/login", web::post().to(login));
 }
 
 impl Into<Error> for ApiError<mon_oeil_auth::Error> {
@@ -37,7 +33,7 @@ async fn login(
     db: web::Data<db::GestureClientPool>,
     conf: web::Data<Conf>,
 ) -> Result<impl Responder, ApiError<mon_oeil_auth::Error>> {
-    handlers::login(&credentials, &conf.hs256_private_key, &db)
+    handlers::login(&credentials, &conf.hs256_private_key, &conf.salt_hash, &db)
         .await
         .map(Json)
         .map_err(ApiError::from)
