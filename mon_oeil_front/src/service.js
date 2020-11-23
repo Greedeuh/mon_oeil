@@ -2,13 +2,9 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 
 const client = axios.create({
-    baseURL: 'http://localhost:8000/',
-    timeout: 1000,
-    headers: {
-    'Access-Control-Allow-Origin': '*'},
-
-  });
-
+  baseURL: window.location.origin + '/',
+  timeout: 1000,
+});
 
 function get_gestures(page, search_text) {
   let uri = 'gestures?max=10&page=' + page;

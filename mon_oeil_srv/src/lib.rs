@@ -1,4 +1,3 @@
-use actix_cors::Cors;
 use actix_files::NamedFile;
 use actix_web::{dev::Server, middleware::Logger, web, App, HttpRequest, HttpServer, Result};
 use std::net::TcpListener;
@@ -30,7 +29,6 @@ pub fn run_with_storage(
     let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .wrap(cors())
             .data(build_storage())
             .data(db_pool.clone())
             .data(build_storage())
@@ -48,7 +46,6 @@ pub fn run_with_storage(
 }
 
 async fn index(req: HttpRequest) -> Result<NamedFile> {
-    println!("AAAAaaaaAAAAaaAAAAaaaa");
     let path: PathBuf = req.match_info().query("filename").parse().unwrap();
     Ok(NamedFile::open(&format!(
         "./mon_oeil_front/dist/{}",
@@ -59,11 +56,6 @@ async fn index(req: HttpRequest) -> Result<NamedFile> {
 async fn vue() -> Result<NamedFile> {
     Ok(NamedFile::open("./mon_oeil_front/dist/index.html")?)
 }
-
-pub fn cors() -> Cors {
-    Cors::permissive()
-}
-
 pub struct Conf {
     pub hs256_private_key: String,
 }

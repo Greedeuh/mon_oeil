@@ -140,7 +140,6 @@ export default new Vuex.Store({
       state.loading = false;
     },
     load_gestures(state, {gestures, total_pages}) {
-        console.log(total_pages)
       state.search_count++;
       state.search = { ...state.search, total_pages: Math.ceil(total_pages / 10)};
       state.gestures = gestures;
