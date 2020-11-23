@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import Intro from "./view/Intro.vue";
-import Gesture from "./view/Gesture.vue";
+import Intro from "./gestures/Intro.vue";
+import Gesture from "./gestures/Gesture.vue";
 import Search from "./Search.vue"
 import Pagination from "./Pagination.vue"
 
