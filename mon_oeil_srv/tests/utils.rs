@@ -100,8 +100,8 @@ pub mod setup {
 
     pub fn insert_2_gestures_with_full_links() {
         let mut client = connect();
-        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
         client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('16991982-1752-4aa0-bb22-db3fbceb3780', '{"tag1", "tag2"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "tag2"}')"#, &[]).unwrap();
 
         client.execute(r#"INSERT INTO descriptions(
                 id_description, id_gesture, val, langs)
@@ -142,8 +142,8 @@ pub mod setup {
 
     pub fn insert_2_gestures_some_content() {
         let mut client = connect();
-        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "bras"}')"#, &[]).unwrap();
         client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('16991982-1752-4aa0-bb22-db3fbceb3780', '{"tag1", "jambe"}')"#, &[]).unwrap();
+        client.execute(r#"INSERT INTO gestures(id_gesture, tags) VALUES ('ce27c124-e47b-490f-b8fe-3f37d5dbbef6', '{"tag1", "bras"}')"#, &[]).unwrap();
 
         client.execute(r#"INSERT INTO descriptions(
                 id_description, id_gesture, val, langs)

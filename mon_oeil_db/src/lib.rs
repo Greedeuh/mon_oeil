@@ -133,8 +133,8 @@ impl GestureClient {
             }
             _ => {
                 let gestures_query = format!(
-                    "SELECT * FROM gestures LIMIT {} OFFSET {}",
-                    pagination.max, offset
+                    "SELECT * FROM gestures ORDER BY {} DESC LIMIT {} OFFSET {}",
+                    CREATION_COL, pagination.max, offset
                 );
                 let gestures = select::<RawGesture>(client, &gestures_query, &[]).await?;
 
@@ -159,12 +159,18 @@ impl GestureClient {
             }
         };
 
-        let descriptions_query = format!("SELECT * FROM {} WHERE {} = ANY($1)", D_TABLE, ID_G_COL);
-        let meanings_query = format!(
-            "SELECT * FROM {} WHERE {} = ANY($1) OR {} = ANY($1)",
-            M_TABLE_WITH_G_ID, ID_G_COL, ID_DG_COL
+        let descriptions_query = format!(
+            "SELECT * FROM {} WHERE {} = ANY($1) ORDER BY {}",
+            D_TABLE, ID_G_COL, CREATION_COL
         );
-        let pictures_query = format!("SELECT * FROM {} WHERE {} = ANY($1)", P_TABLE, ID_G_COL);
+        let meanings_query = format!(
+            "SELECT * FROM {} WHERE {} = ANY($1) OR {} = ANY($1) ORDER BY {}",
+            M_TABLE_WITH_G_ID, ID_G_COL, ID_DG_COL, CREATION_COL
+        );
+        let pictures_query = format!(
+            "SELECT * FROM {} WHERE {} = ANY($1) ORDER BY {}",
+            P_TABLE, ID_G_COL, CREATION_COL
+        );
 
         let (descriptions, meanings, pictures, total) = future::try_join4(
             select::<RawDescription>(client, &descriptions_query, &[&ids_gestures]),

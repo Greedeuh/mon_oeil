@@ -19,6 +19,7 @@ pub const U_TABLE: &str = "users";
 pub const ID_G_COL: &str = "id_gesture";
 pub const ID_DG_COL: &str = "id_description_gesture";
 pub const TAGS_COL: &str = "tags";
+pub const CREATION_COL: &str = "creation_date";
 pub const ID_D_COL: &str = "id_description";
 pub const VALUE_D_COL: &str = "val";
 pub const LANG_D_COL: &str = "langs";

@@ -5,9 +5,10 @@ DROP TABLE IF EXISTS pictures CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE gestures (
-	id_gesture 	UUID PRIMARY KEY,
-    tags		text[] NOT NULL,
-    document tsvector
+	id_gesture 		UUID PRIMARY KEY,
+    tags			text[] NOT NULL,
+	creation_date	TIMESTAMP NOT NULL DEFAULT NOW(),
+    document 		tsvector
 );
 
 CREATE TABLE descriptions (
@@ -15,7 +16,8 @@ CREATE TABLE descriptions (
 	id_gesture		UUID REFERENCES gestures ON DELETE CASCADE NOT NULL,
     val				text NOT NULL,
     langs			text[] NOT NULL,
-    document tsvector
+	creation_date	TIMESTAMP NOT NULL DEFAULT NOW(),
+	document 		tsvector
 );
 
 CREATE TABLE meanings (
@@ -24,21 +26,24 @@ CREATE TABLE meanings (
    	id_gesture 		UUID REFERENCES gestures ON DELETE CASCADE,
     val				text NOT NULL,
     langs			text[] NOT NULL,
-    document tsvector,
+    creation_date	TIMESTAMP NOT NULL DEFAULT NOW(),
+	document 		tsvector,
     CHECK (id_description IS NULL OR id_gesture IS NULL)
 );
 
 CREATE TABLE pictures (
-	id_picture 	UUID PRIMARY KEY,
-	id_gesture 	UUID REFERENCES gestures ON DELETE CASCADE NOT NULL,
-    langs		text[] NOT NULL,
-    format		text NOT NULL
+	id_picture 		UUID PRIMARY KEY,
+	id_gesture 		UUID REFERENCES gestures ON DELETE CASCADE NOT NULL,
+	langs			text[] NOT NULL,
+    format			text NOT NULL,
+	creation_date	TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE users
 (
-    username    text PRIMARY KEY,
-    PASSWORD    text NOT NULL
+    username    	text PRIMARY KEY,
+    PASSWORD    	text NOT NULL,
+	creation_date	TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 ------- VIEWS             -------
