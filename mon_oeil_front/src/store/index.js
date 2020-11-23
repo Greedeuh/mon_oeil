@@ -236,6 +236,16 @@ export default new Vuex.Store({
         context.commit("stop_loading");
       });
     },
+    update_gesture(context, { id, new_gesture }) {
+      service.put_gesture(id, new_gesture).then(() => {
+        context.dispatch('load_gestures');
+        context.commit('notif', notif_ok);
+      }).catch((e) => {
+        console.error(e);
+        context.commit('notif', notif_ko);
+        context.commit("stop_loading");
+      });
+    },
     update_picture_meta(context, { id, new_picture_meta }) {
       service.put_picture_meta(id, new_picture_meta).then(() => {
         context.dispatch('load_gestures');

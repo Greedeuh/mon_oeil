@@ -48,6 +48,10 @@ function put_meaning(id, new_meaning) {
   return client.put('meanings/' + id,  new_meaning).then(() => undefined)
 }
 
+function put_gesture(id, new_gesture) {
+  return client.put('gestures/' + id,  new_gesture).then(() => undefined)
+}
+
 function put_picture_meta(id, new_picture_meta) {
   return client.put('pictures/' + id + '/meta',  new_picture_meta).then(() => undefined)
 }
@@ -114,6 +118,7 @@ export const service = {
   put_description,
   put_meaning,
   put_picture_meta,
+  put_gesture,
   put_picture_file,
   post_description_meaning,
   post_gesture_meaning,
