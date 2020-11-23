@@ -6,7 +6,7 @@ RUN cd mon_oeil_front && yarn && yarn build
 FROM rustlang/rust:nightly as actix-env
 WORKDIR /app
 ADD . /app
-RUN cargo build --release
+RUN cargo -Z avoid-dev-deps build --release
 
 FROM gcr.io/distroless/cc-debian10
 COPY --from=vue-env /app/mon_oeil_front/dist /mon_oeil_front/dist
