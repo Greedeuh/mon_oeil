@@ -44,7 +44,7 @@ export default {
   },
   watch: {
     gesture: function(gesture) {
-      this.inner_tags=this.gesture.tags ? [...this.gesture.tags] : [];
+      this.inner_tags=gesture.tags ? [...gesture.tags] : [];
     }
   },
   methods: {
