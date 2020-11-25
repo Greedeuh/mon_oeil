@@ -1,92 +1,20 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import jwt from "jsonwebtoken";
 
 import { service } from '../service';
 
 Vue.use(Vuex);
 
-let mock_gestures = [
-  {
-    id: "Bien!1",
-    descriptions: [
-      {
-        id: "Bien!1",
-        value: "Le pouce est vers le haut",
-        langs: ["fr", "us"],
-        meanings: [
-          {
-            value: "Super!, Bien joué!, Nickel ou simplement Bien.",
-            langs: ["fr", "us"],
-          },
-          {
-            value: "Bien joué!, Nickel ou simplement Bien.",
-          },
-        ],
-      },
-      {
-        value: "Le pouce est vers le bas",
-        langs: ["fr", "us"],
-        meanings: [
-          {
-            value: "C'est perdu!, Pas cool... c'est mort.",
-          },
-        ],
-      },
-    ],
-
-    meanings: [
-      {
-        value: " Super!, Bien joué!, Nickel ou simplement Bien.",
-        langs: ["us"],
-      },
-    ],
-    pictures: [{ id: "xqxq", langs: ["fr", "us"] }],
-  },
-  {
-    id: "Bien!",
-    descriptions: [
-      {
-        value: "Le pouce est vers le haut",
-        langs: ["fr", "us"],
-        meanings: [
-          {
-            value: "Super!, Bien joué!, Nickel ou simplement Bien.",
-            langs: ["fr", "us"],
-          },
-          {
-            value: "Bien joué!, Nickel ou simplement Bien.",
-          },
-        ],
-      },
-      {
-        value: "Le pouce est vers le bas",
-        langs: ["fr", "us"],
-        meanings: [
-          {
-            value: "C'est perdu!, Pas cool... c'est mort.",
-          },
-        ],
-      },
-    ],
-
-    meanings: [
-      {
-        value: " Super!, Bien joué!, Nickel ou simplement Bien.",
-        langs: ["us"],
-      },
-    ],
-    pictures: [{ id: "xqxq", langs: ["fr", "us"] }],
-  },
-];
-
 const notif_ok = { msg: "Action effectuée!", success: true };
 const notif_ko = { msg: "Oups ça n'a pas fonctionné :( Reviens plus tard", success: false };
 const notif_ko_login = { msg: "Les identifiants ne sont pas correct :(", success: false };
 
+
 export default new Vuex.Store({
   state: {
     search_count: 0,
-    gestures: mock_gestures,
+    gestures: [],
     editor_mode: false,
     selected_id_gesture: null,
     loading: false,
@@ -98,7 +26,7 @@ export default new Vuex.Store({
     },
     user: {
       logging_in: false,
-      jwt_payload: null
+      jwt_payload: sessionStorage.getItem('jwt') ? jwt.decode(sessionStorage.getItem('jwt')) : null
     }
   },
   getters: {

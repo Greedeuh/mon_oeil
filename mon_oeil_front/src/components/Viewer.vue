@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import Intro from "./gestures/Intro.vue";
+import Intro from "./Intro.vue";
 import Gesture from "./gestures/Gesture.vue";
 import Search from "./Search.vue"
 import Pagination from "./Pagination.vue"
@@ -44,6 +44,10 @@ export default {
     ...mapGetters(["gestures"]),
   },
   created() {
+    if (this.gestures.length <= 0) {
+      this.$store.dispatch('load_gestures')
+    }
+
     this.$store.subscribe((mutation, state) => {
       if(mutation.type === 'go_page' && state.search_count > 1) {
         this.$refs.el.scroll({

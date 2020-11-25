@@ -42,6 +42,7 @@ pub fn run_with_storage(
                 core::app_config(&mut config);
             })
             .route("/", web::get().to(vue))
+            .route("/about", web::get().to(vue))
             .route("/{filename:.*}", web::get().to(index))
     })
     .listen(listener)?

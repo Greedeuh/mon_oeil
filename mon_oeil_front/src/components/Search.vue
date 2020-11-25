@@ -1,6 +1,6 @@
 <template>
   <div class="search">
-      <input class="bar" type="search" :value="search.text" @keyup="text_change" @search="text_change">
+      <input class="bar" type="search" :value="search.text" @keyup="text_change" @search="text_change" placeholder="Rechercher 🔍">
   </div>
 </template>
 

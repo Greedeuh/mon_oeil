@@ -1,11 +1,16 @@
 <template>
   <div class="login_background" @click="close">
     <div class="login">
-      <form @submit.prevent="login" @click.stop="stop">
-        <input v-model="username" class="inputs" type="text" placeholder="username"/><br>
-        <input v-model="password" class="inputs" type="passsword" placeholder="password"/><br>
-        <input class="inputs submit" type="submit" value="Se connecter" ><br>
+      <div v-if="!user_logged" class="connect">
+        <form @submit.prevent="login" @click.stop="stop">
+          <input v-model="username" class="inputs" type="text" placeholder="username"/><br>
+          <input v-model="password" class="inputs" type="passsword" placeholder="password"/><br>
+          <input class="inputs submit" type="submit" value="Se connecter" ><br>
         </form>
+      </div>
+      <div v-else class="connected">
+        {{ user.jwt_payload.username }} vous êtes bien connecté :).
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +52,9 @@ export default {
 
   computed: {
     ...mapGetters(["user"]),
+    user_logged(){
+      return this.user.jwt_payload && this.user.jwt_payload.exp > new Date().getTime() / 1000
+    }
   },
 };
 </script>

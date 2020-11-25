@@ -2,9 +2,8 @@
   <div id="app">
     <loading :active.sync="loading" :is-full-page="true" />
     <notifications group="app" />
-    <Viewer id="viewer" :class="{ editor_mode: editor_mode }" />
-    <Editor v-if="editor_mode" id="editor" />
     <Login v-if="user.logging_in"/>
+    <router-view/>
   </div>
 </template>
 
@@ -15,8 +14,6 @@ import "vue-select/dist/vue-select.css";
 
 import { mapGetters } from 'vuex'
 
-import Viewer from "./components/Viewer.vue";
-import Editor from "./components/Editor.vue";
 import Login from "./components/Login.vue";
 
 const key_pressed = [];
@@ -24,8 +21,6 @@ const key_pressed = [];
 export default {
   name: "App",
   components: {
-    Viewer,
-    Editor,
     Loading,
     Login
   },
@@ -73,8 +68,6 @@ export default {
     }
   },
   created() {
-    this.$store.dispatch('load_gestures')
-
     this.$store.subscribe(this.on_notif);
 
     window.addEventListener('keydown', this.on_key_down);
@@ -98,18 +91,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   font-size: 19px;
-  display: flex;
 }
 
-#editor_mode {
-  position: fixed;
+a {
+  text-decoration: none;
 }
 
-#viewer.editor_mode {
-  width: 50vw;
+a:visited {
+  color: #2c3e50;
 }
 
-#editor {
-  width: 50vw;
+a:hover {
+  text-decoration: underline;  
 }
 </style>
