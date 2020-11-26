@@ -22,7 +22,8 @@ export default new Vuex.Store({
     search: {
       page: 1,
       total_pages:1,
-      text: ""
+      text: "",
+      contributions: false
     },
     user: {
       logging_in: false,
@@ -86,6 +87,9 @@ export default new Vuex.Store({
     },
     jwt_payload(state, jwt_payload) {
       state.user.jwt_payload = jwt_payload;
+    },
+    contributions_search(state, yes_no) {
+      state.search.contributions = yes_no;
     }
   },
   actions: {

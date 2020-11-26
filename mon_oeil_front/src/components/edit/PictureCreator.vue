@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="picture">
     <LangsSelector v-model="langs" />
     <img id="picture-img" v-if="file" :src="preview_file" />
     <input type="file" ref="input_file" v-on:change="select_file" accept="image/png, image/jpeg"/>
@@ -60,4 +60,16 @@ export default {
 <style scoped>
 .bad_file {
   border: 1px solid red; 
-}</style>
+}
+
+.picture {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.picture:hover {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+</style>

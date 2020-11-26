@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <button @click="del">Supprimer</button>
+  <div class="picture">
+    <button @click="del" class="red-button">x Supprimer cette image</button>
     <LangsSelector v-model="langs" />
     <button v-if="!same_inner" @click="update_meta">Enregitrer</button>
     <img id="picture-img" :src="file ? preview_file : picture.url" />
@@ -69,4 +69,16 @@ export default {
 <style scoped>
 .bad_file {
   border: 1px solid red; 
-}</style>
+}
+
+.picture {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.picture:hover {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+</style>

@@ -4,7 +4,7 @@
       <div v-if="!user_logged" class="connect">
         <form @submit.prevent="login" @click.stop="stop">
           <input v-model="username" class="inputs" type="text" placeholder="username"/><br>
-          <input v-model="password" class="inputs" type="passsword" placeholder="password"/><br>
+          <input v-model="password" class="inputs" type="password" placeholder="password"/><br>
           <input class="inputs submit" type="submit" value="Se connecter" ><br>
         </form>
       </div>

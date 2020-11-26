@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <v-select multiple push-tags :options="know_langs" v-model="inner_langs" @input="$emit('change', $event)" />
+  <div class="langs">
+    <label>Pays: </label><v-select class="vue-select" multiple push-tags :options="know_langs" v-model="inner_langs" @input="$emit('change', $event)" />
   </div>
 </template>
 
@@ -26,7 +26,12 @@ export default {
 </script>
 
 <style scoped>
-#content {
-  padding: 20px;
+.langs {
+  display: flex;
+  align-items: center;
+}
+
+.vue-select {
+  max-width: 200px;
 }
 </style>

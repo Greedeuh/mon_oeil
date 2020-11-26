@@ -1,6 +1,6 @@
 <template>
   <div id="editor">
-    <h1>Editeur</h1> <button @click="add_gesture">Nouveau geste</button>
+    <h1>Editeur <button class="add-gesture classic-button" @click="add_gesture"> + Nouveau geste</button></h1> 
     <GestureEditor v-if="selected_gesture" :gesture="selected_gesture"/>
   </div>
 </template>
@@ -30,5 +30,13 @@ export default {
 #editor {
   height: 100vh;
   overflow: auto;
+}
+
+h1 {
+  display: flex;
+}
+
+.add-gesture {
+  margin: 7px 25px;
 }
 </style>

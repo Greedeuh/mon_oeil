@@ -1,24 +1,36 @@
 <template>
   <div class="gesture">
-    <button @click="del">Supprimer</button>
-      <v-select multiple push-tags taggable v-model="inner_tags"/>
-    <button v-if="!same_inner" @click="update_gesture">Enregistrer</button>
-    <DescriptionEditor
-      v-for="description in gesture.descriptions"
-      :key="description.id"
-      :description="{ ...description }"
-    />
-    <button @click="add_description">Ajouter une Description</button>
-    <MeaningEditor
-      v-for="meaning in gesture.meanings"
-      :key="meaning.id"
-      :meaning="meaning"
-      class="meaning"
-    />
-    <button @click="add_meaning">Ajouter un Meaning</button>
-
-    <PictureEditor v-for="picture in gesture.pictures" :key="picture.id" :picture="picture"/>
-    <PictureCreator :id_gesture="gesture.id" />
+    <button @click="del" class="red-button del">x Supprimer ce geste</button>
+    <br/>
+      <div class="tags">
+        <label>Tags:</label><v-select multiple push-tags taggable v-model="inner_tags" class="vue-select"/>
+      <button v-if="!same_inner" @click="update_gesture" class="classic-button">Enregistrer</button>
+    </div>
+    <div class="descriptions">
+      <h3>Descriptions</h3>
+      <DescriptionEditor
+        v-for="description in gesture.descriptions"
+        :key="description.id"
+        :description="{ ...description }"
+      />
+    </div>
+    <button @click="add_description" class="classic-button">+ Ajouter une description</button>
+    <div class="meanings">
+      <h3>Sens global</h3>
+      <MeaningEditor
+        v-for="meaning in gesture.meanings"
+        :key="meaning.id"
+        :meaning="meaning"
+        class="meaning"
+      />
+      <button @click="add_meaning" class="classic-button">+ Ajouter un Meaning</button>
+    </div>
+    <div class="pictures">
+      <h3>Images</h3>
+      <PictureEditor v-for="picture in gesture.pictures" :key="picture.id" :picture="picture"/>
+      <h4>Nouvelle image</h4>
+      <PictureCreator :id_gesture="gesture.id" />
+    </div>
   </div>
 </template>
 
@@ -84,5 +96,14 @@ export default {
 <style scoped>
 .gesture {
   padding: 0 20px;
+}
+
+.del {
+  margin-bottom: 20px;
+}
+
+.tags {
+  display: flex;
+  align-items: center;
 }
 </style>

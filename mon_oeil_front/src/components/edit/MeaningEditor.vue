@@ -1,9 +1,9 @@
 <template>
-  <div>
-    <button @click="del">Supprimer</button>
+  <div class="meaning">
+    <button @click="del" class="red-button">Supprimer</button>
     <LangsSelector v-model="langs" />
-    <input type="text" v-model="value" />
-    <button v-if="!same_inner" @click="update">Enregistrer</button>
+    <textarea v-model="value"></textarea><br/>
+    <button v-if="!same_inner" @click="update" class="classic-button">Enregistrer</button>
   </div>
 </template>
 
@@ -46,4 +46,14 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.meaning {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.meaning:hover {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+</style>

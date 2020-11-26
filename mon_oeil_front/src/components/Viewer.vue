@@ -41,11 +41,13 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["gestures"]),
+    ...mapGetters(["gestures", 'search']),
   },
   created() {
-    if (this.gestures.length <= 0) {
-      this.$store.dispatch('load_gestures')
+    if (this.gestures.length <= 0 || this.search.contributions) {
+      this.$store.commit('contributions_search', false);
+      this.$store.commit('search_text', '');
+      this.$store.dispatch('load_gestures');
     }
 
     this.$store.subscribe((mutation, state) => {

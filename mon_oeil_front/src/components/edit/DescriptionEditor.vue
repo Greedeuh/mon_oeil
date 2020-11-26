@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <button @click="del">Supprimer</button>
+  <div class="description">
+    <button @click="del" class="red-button">x Supprimer cette description</button>
     <div class="inner">
       <LangsSelector v-model="langs" />
-      <input type="text" v-model="value" />
-      <button v-if="!same_inner" @click="update">Enregistrer</button>
+      <textarea v-model="value"></textarea>
+      <button v-if="!same_inner" @click="update" class="classic-button">Enregistrer</button>
     </div>
     <MeaningEditor
       v-for="meaning in description.meanings"
@@ -12,7 +12,7 @@
       :meaning="meaning"
       class="meaning"
     />
-    <button @click="add_meaning" class="meaning">Ajouter un Meaning</button>
+    <button @click="add_meaning" class="meaning classic-button">+ Ajouter un sens</button>
   </div>
 </template>
 
@@ -67,6 +67,15 @@ export default {
 </script>
 
 <style scoped>
+.description {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.description:hover {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
 .meaning {
   margin-left: 30px;
 }

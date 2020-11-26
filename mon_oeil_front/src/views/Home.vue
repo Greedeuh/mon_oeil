@@ -18,7 +18,7 @@ export default {
     Editor
   },
   computed: {
-    ...mapGetters(['editor_mode', 'loading', 'user'])
+    ...mapGetters(['editor_mode'])
   },
 };
 </script>

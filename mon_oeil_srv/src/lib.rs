@@ -43,6 +43,7 @@ pub fn run_with_storage(
             })
             .route("/", web::get().to(vue))
             .route("/about", web::get().to(vue))
+            .route("/contribute", web::get().to(vue))
             .route("/{filename:.*}", web::get().to(index))
     })
     .listen(listener)?

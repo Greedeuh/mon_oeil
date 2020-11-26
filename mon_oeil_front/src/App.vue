@@ -104,4 +104,66 @@ a:visited {
 a:hover {
   text-decoration: underline;  
 }
+
+.classic-button {
+	box-shadow:inset 0px 39px 0px -24px #07adad;
+	background:linear-gradient(to bottom, #009999 5%, #03a3a3 100%);
+	background-color:#009999;
+	border-radius:4px;
+	border:1px solid #ffffff;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	padding:6px 15px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #006161;
+}
+
+.classic-button:hover {
+	background:linear-gradient(to bottom, #03a3a3 5%, #009999 100%);
+	background-color:#03a3a3;
+}
+
+.classic-button:active {
+	position:relative;
+	top:1px;
+}
+
+.red-button {
+	box-shadow:inset 0px 39px 0px -24px #e74949;
+	background:linear-gradient(to bottom, #dd4141 5%, #ca3939 100%);
+	background-color:#dd4141;
+	border-radius:4px;
+	border:1px solid #ffffff;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	padding:6px 15px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #8a2a2a;
+}
+
+.red-button:hover {
+	background:linear-gradient(to bottom, #ca3939 5%, #dd4141 100%);
+	background-color:#ca3939;
+}
+
+.red-button:active {
+	position:relative;
+	top:1px;
+}
+
+.vue-select {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 10px;
+}
+
+textarea {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 10px;
+}
 </style>
